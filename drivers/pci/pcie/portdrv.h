@@ -23,6 +23,9 @@
 extern struct bus_type pcie_port_bus_type;
 int pcie_port_device_register(struct pci_dev *dev);
 #ifdef CONFIG_PM
+#ifdef CONFIG_ARCH_GEN3
+int pcie_portdrv_restore_config(struct pci_dev *dev);
+#endif
 int pcie_port_device_suspend(struct device *dev);
 int pcie_port_device_resume(struct device *dev);
 #endif

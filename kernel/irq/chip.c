@@ -473,6 +473,9 @@ out:
 		goto out_eoi;
 	goto out_unlock;
 }
+#ifdef CONFIG_ARCH_GEN3
+EXPORT_SYMBOL_GPL(handle_fasteoi_irq);
+#endif
 
 /**
  *	handle_edge_irq - edge type IRQ handler

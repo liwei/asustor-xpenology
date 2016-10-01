@@ -169,7 +169,9 @@ int __pci_read_base(struct pci_dev *dev, enum pci_bar_type type,
 			struct resource *res, unsigned int pos)
 {
 	u32 l, sz, mask;
+#ifndef CONFIG_ARCH_GEN3
 	u16 orig_cmd;
+#endif
 	struct pci_bus_region region;
 	bool bar_too_big = false, bar_disabled = false;
 
@@ -181,12 +183,14 @@ int __pci_read_base(struct pci_dev *dev, enum pci_bar_type type,
 	}
 #endif /* CONFIG_SYNO_ICH_UHCI_NO_MMIO_OFF */
 
+#ifndef CONFIG_ARCH_GEN3
 	/* No printks while decoding is disabled! */
 	if (!dev->mmio_always_on) {
 		pci_read_config_word(dev, PCI_COMMAND, &orig_cmd);
 		pci_write_config_word(dev, PCI_COMMAND,
 			orig_cmd & ~(PCI_COMMAND_MEMORY | PCI_COMMAND_IO));
 	}
+#endif
 
 	res->name = pci_name(dev);
 
@@ -279,8 +283,10 @@ int __pci_read_base(struct pci_dev *dev, enum pci_bar_type type,
 fail:
 	res->flags = 0;
 out:
+#ifndef CONFIG_ARCH_GEN3
 	if (!dev->mmio_always_on)
 		pci_write_config_word(dev, PCI_COMMAND, orig_cmd);
+#endif
 #ifdef CONFIG_SYNO_ICH_UHCI_NO_MMIO_OFF
 	if (PCI_VENDOR_ID_INTEL == dev->vendor && 0x2934 == dev->device) {
 		dev_printk(KERN_INFO, &dev->dev, "[%04x:%04x] Sizing Complete - reg %x\n",
@@ -555,7 +561,7 @@ static enum pci_bus_speed agp_speed(int agp3, int agpstat)
 		index = 1;
 	else
 		goto out;
-	
+
 	if (agp3) {
 		index += 2;
 		if (index == 5)
@@ -763,7 +769,7 @@ int pci_scan_bridge(struct pci_bus *bus, struct pci_dev *dev, int max, int pass)
 	}
 
 	/* Disable MasterAbortMode during probing to avoid reporting
-	   of bus errors (in some architectures) */ 
+	   of bus errors (in some architectures) */
 	pci_read_config_word(dev, PCI_BRIDGE_CONTROL, &bctl);
 	pci_write_config_word(dev, PCI_BRIDGE_CONTROL,
 			      bctl & ~PCI_BRIDGE_CTL_MASTER_ABORT);
@@ -980,7 +986,7 @@ void set_pcie_hotplug_bridge(struct pci_dev *pdev)
  * pci_setup_device - fill in class and map information of a device
  * @dev: the device structure to fill
  *
- * Initialize the device structure with information about the device's 
+ * Initialize the device structure with information about the device's
  * vendor,class,memory and IO-space addresses,IRQ lines etc.
  * Called at initialisation of the PCI subsystem and by CardBus services.
  * Returns 0 on success and negative if unknown type of device (not normal,
@@ -1086,7 +1092,7 @@ int pci_setup_device(struct pci_dev *dev)
 			goto bad;
 		/* The PCI-to-PCI bridge spec requires that subtractive
 		   decoding (i.e. transparent) bridge must have programming
-		   interface code of 0x01. */ 
+		   interface code of 0x01. */
 		pci_read_irq(dev);
 		dev->transparent = ((dev->class & 0xff) == 1);
 		pci_read_bases(dev, 2, PCI_ROM_ADDRESS1);

@@ -70,6 +70,12 @@ extern int is_hpet_enabled(void);
 extern int hpet_enable(void);
 extern void hpet_disable(void);
 extern unsigned int hpet_readl(unsigned int a);
+
+#ifdef CONFIG_ARCH_GEN3
+extern void hpet_enable_legacy_int(void);
+extern void hpet_disable_legacy_int(void);
+#endif
+
 extern void force_hpet_resume(void);
 
 struct irq_data;

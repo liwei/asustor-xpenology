@@ -523,6 +523,14 @@ config X86_SUPPORTS_MEMORY_FAILURE
 	depends on X86_64 || !SPARSEMEM
 	select ARCH_SUPPORTS_MEMORY_FAILURE
 
+menu "Intel Media SOC Gen3 support"
+
+config ARCH_GEN3
+	bool "Enable Intel Media SOC Gen3 support"
+	default y
+
+endmenu
+
 config X86_VISWS
 	bool "SGI 320/540 (Visual Workstation)"
 	depends on X86_32 && PCI && X86_MPPARSE && PCI_GODIRECT
@@ -666,6 +674,14 @@ endif #HYPERVISOR_GUEST
 
 config NO_BOOTMEM
 	def_bool y
+        bool "Disable Bootmem code"
+        ---help---
+          Use early_res directly instead of bootmem before slab is ready.
+                - allocator (buddy) [generic]
+                - early allocator (bootmem) [generic]
+                - very early allocator (reserve_early*()) [x86]
+                - very very early allocator (early brk model) [x86]
+          So reduce one layer between early allocator to final allocator
 
 config MEMTEST
 	bool "Memtest"

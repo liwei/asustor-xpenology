@@ -5,6 +5,7 @@ obj-$(CONFIG_PCI_MMCONFIG)	+= mmconfig_$(BITS).o direct.o mmconfig-shared.o
 obj-$(CONFIG_PCI_DIRECT)	+= direct.o
 obj-$(CONFIG_PCI_OLPC)		+= olpc.o
 obj-$(CONFIG_PCI_XEN)		+= xen.o
+obj-$(CONFIG_ARCH_GEN3)         += intel_media_proc_gen3.o
 
 obj-y				+= fixup.o
 obj-$(CONFIG_X86_INTEL_CE)      += ce4100.o

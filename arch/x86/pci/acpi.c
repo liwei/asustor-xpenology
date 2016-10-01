@@ -22,7 +22,15 @@ struct pci_root_info {
 #endif
 };
 
+/*
+ * The following code is for Intel Media SOC SMP support. Since kernel can not get a correct ACPI data from CEFDK,
+ * thus by default we force to ignore host bridge windows from ACPI
+ */
+#if defined(CONFIG_ARCH_GEN3) && defined(CONFIG_SMP)
+static bool pci_use_crs = false;
+#else
 static bool pci_use_crs = true;
+#endif
 static bool pci_ignore_seg = false;
 
 static int __init set_use_crs(const struct dmi_system_id *id)
@@ -314,7 +322,7 @@ setup_resource(struct acpi_resource *acpi_res, void *data)
 	} else if (orig_end != end) {
 		dev_info(&info->bridge->dev,
 			"host bridge window [%#llx-%#llx] "
-			"([%#llx-%#llx] ignored, not CPU addressable)\n", 
+			"([%#llx-%#llx] ignored, not CPU addressable)\n",
 			start, orig_end, end + 1, orig_end);
 	}
 

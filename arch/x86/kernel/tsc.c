@@ -21,6 +21,13 @@
 #include <asm/nmi.h>
 #include <asm/x86_init.h>
 
+/******************************************************************
+
+ Includes Intel Corporation's changes/modifications dated: 03/2013.
+ Changed/modified portions - Copyright(c) 2013, Intel Corporation.
+
+******************************************************************/
+
 unsigned int __read_mostly cpu_khz;	/* TSC clocks / usec, not used here */
 EXPORT_SYMBOL(cpu_khz);
 
@@ -222,6 +229,40 @@ static unsigned long pit_calibrate_tsc(u32 latch, unsigned long ms, int loopmin)
 	pitcnt = 0;
 	tscmax = 0;
 	tscmin = ULONG_MAX;
+
+#ifdef CONFIG_ARCH_GEN3
+/*
+ * The following code is for Intel Media SOC Gen3 B0 and B1 workaround.
+*/
+
+/*
+ * The 8254 timer flop has an issue between the reset and set pin of a flop.
+ * This causes a race condition to happen and the value can change based on
+ * clock sku. The workaround for this silicon issue uses a polling method which
+ * is not affected by race condition. If this workaround is not applied, then the
+ * cpu MHz entry in /proc/cpuinfo may show the wrong information. This workaround
+ * is for errata number 22 in Errata - A Step.
+*/
+
+	u8 count1;
+	u8 count2;
+	outb(0x80, 0x43);
+	count1 = inb(0x42);
+	count2 = inb(0x42);
+	while (count1 >= 0x20 || count2 != 0) {
+		t2 = get_cycles();
+		delta = t2 - tsc;
+		tsc = t2;
+		if ((unsigned long) delta < tscmin)
+			tscmin = (unsigned int) delta;
+		if ((unsigned long) delta > tscmax)
+			tscmax = (unsigned int) delta;
+		pitcnt++;
+		outb(0x80, 0x43);
+		count1 = inb(0x42);
+		count2 = inb(0x42);
+	}
+#else
 	while ((inb(0x61) & 0x20) == 0) {
 		t2 = get_cycles();
 		delta = t2 - tsc;
@@ -232,7 +273,7 @@ static unsigned long pit_calibrate_tsc(u32 latch, unsigned long ms, int loopmin)
 			tscmax = (unsigned int) delta;
 		pitcnt++;
 	}
-
+#endif
 	/*
 	 * Sanity checks:
 	 *

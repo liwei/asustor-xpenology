@@ -560,6 +560,10 @@ static void pci_pm_default_resume(struct pci_dev *pci_dev)
 static void pci_pm_default_suspend(struct pci_dev *pci_dev)
 {
 	/* Disable non-bridge devices without PM support */
+#ifdef CONFIG_ARCH_GEN3
+	if (!pci_dev->state_saved)
+		pci_save_state(pci_dev);
+#endif
 	if (!pci_is_bridge(pci_dev))
 		pci_disable_enabled_device(pci_dev);
 }
@@ -668,6 +672,9 @@ static int pci_pm_suspend_noirq(struct device *dev)
 		return pci_legacy_suspend_late(dev, PMSG_SUSPEND);
 
 	if (!pm) {
+#ifdef CONFIG_ARCH_GEN3
+		if (!pci_dev->state_saved)
+#endif
 		pci_save_state(pci_dev);
 		return 0;
 	}

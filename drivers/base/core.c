@@ -9,6 +9,12 @@
  * This file is released under the GPLv2
  *
  */
+/******************************************************************
+
+ Includes Intel Corporation's changes/modifications dated: 03/2013.
+ Changed/modified portions - Copyright(c) 2013, Intel Corporation.
+
+******************************************************************/
 
 #include <linux/device.h>
 #include <linux/err.h>
@@ -1307,8 +1313,11 @@ void device_unregister(struct device *dev)
 	device_del(dev);
 	put_device(dev);
 }
-
+#ifdef CONFIG_ARCH_GEN3
+struct device *next_device(struct klist_iter *i)
+#else
 static struct device *next_device(struct klist_iter *i)
+#endif
 {
 	struct klist_node *n = klist_next(i);
 	struct device *dev = NULL;

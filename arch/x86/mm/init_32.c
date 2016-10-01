@@ -4,6 +4,13 @@
  *
  *  Support of BIGMEM added by Gerhard Wichert, Siemens AG, July 1999
  */
+/*###################################################################
+
+#Includes Intel Corporation's changes/modifications dated: 03/2013.
+#Changed/modified portions - Copyright(c) 2013, Intel Corporation.
+
+###################################################################*/
+
 
 #include <linux/module.h>
 #include <linux/signal.h>
@@ -54,6 +61,16 @@
 #include <asm/init.h>
 
 #include "mm_internal.h"
+
+#ifdef CONFIG_ARCH_GEN3
+#define GBE_CONFIG_RAM_BASE    0x60000
+#define GBE_CONFIG_DATA_LENGTH 0x200
+/* from $(KERNEL)/drivers/net/e1000/gbe_mac_access.h */
+#define ACPI_RAM_BASE    0x10000
+#define ACPI_DATA_LENGTH 0x8000
+#define INTEL_8051_RAM_BASE    0x40000
+#define INTEL_8051_DATA_LENGTH 0x10000
+#endif
 
 unsigned long highstart_pfn, highend_pfn;
 
@@ -687,6 +704,13 @@ void __init setup_bootmem_allocator(void)
 	printk(KERN_INFO "  mapped low ram: 0 - %08lx\n",
 		 max_pfn_mapped<<PAGE_SHIFT);
 	printk(KERN_INFO "  low ram: 0 - %08lx\n", max_low_pfn<<PAGE_SHIFT);
+#ifdef CONFIG_ARCH_GEN3
+#ifdef CONFIG_SMP
+        memblock_reserve(GBE_CONFIG_RAM_BASE, GBE_CONFIG_DATA_LENGTH); //RAM reverve for Gbe mac
+        memblock_reserve(ACPI_RAM_BASE, ACPI_DATA_LENGTH); //RAM reserve for ACPI data
+        memblock_reserve(INTEL_8051_RAM_BASE, INTEL_8051_DATA_LENGTH);//RAM reserver for 8051 firmware
+#endif
+#endif
 }
 
 /*

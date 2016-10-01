@@ -2,6 +2,12 @@
  * Copyright (C) 2002 Roman Zippel <zippel@linux-m68k.org>
  * Released under the terms of the GNU GPL v2.0.
  */
+/*###################################################################
+
+#Includes Intel Corporation's changes/modifications dated: 03/2013.
+#Changed/modified portions - Copyright(c) 2013, Intel Corporation.
+
+###################################################################*/
 
 #include <locale.h>
 #include <ctype.h>
@@ -703,6 +709,14 @@ int main(int ac, char **av)
 			exit(1);
 		}
 	}
+	/* This is for Intel Media SOC Gen3 Support, creates "include/linux/autoconf.h" link to be consistent with kernel versions earlier than 2.6.35
+	#ifdef CONFIG_ARCH_GEN3
+	*/
+	if (access("include/linux/autoconf.h",0)&&(symlink("../generated/autoconf.h","include/linux/autoconf.h")))
+	{
+			fprintf(stderr, _("\n*** can not symlink include/generated/autoconf.h to include/linux/autoconf.h.\n\n"));
+	}
+
 	return 0;
 }
 

@@ -16,6 +16,12 @@
  * domain dependencies may differ from the ancestral dependencies that the
  * subsystem list maintains.
  */
+/******************************************************************
+
+ Includes Intel Corporation's changes/modifications dated: 03/2013.
+ Changed/modified portions - Copyright(c) 2013, Intel Corporation.
+
+******************************************************************/
 
 #include <linux/device.h>
 #include <linux/kallsyms.h>
@@ -33,6 +39,12 @@
 #include "power.h"
 
 typedef int (*pm_callback_t)(struct device *);
+
+#ifdef CONFIG_ARCH_GEN3
+int suspend_device(struct device *dev, pm_message_t state);
+int resume_device(struct device *dev, pm_message_t state);
+#endif
+
 
 /*
  * The entries in the dpm_list list are in a depth first order, simply
@@ -54,7 +66,11 @@ struct suspend_stats suspend_stats;
 static DEFINE_MUTEX(dpm_list_mtx);
 static pm_message_t pm_transition;
 
+#ifdef CONFIG_ARCH_GEN3
+int async_error;
+#else
 static int async_error;
+#endif
 
 /**
  * device_pm_sleep_init - Initialize system suspend-related device fields.
@@ -655,6 +671,12 @@ static void async_resume(void *data, async_cookie_t cookie)
 		pm_dev_err(dev, pm_transition, " async", error);
 	put_device(dev);
 }
+#ifdef CONFIG_ARCH_GEN3
+int resume_device(struct device *dev, pm_message_t state)
+{
+        return device_resume(dev,state,false);
+}
+#endif
 
 static bool is_async(struct device *dev)
 {
@@ -1164,7 +1186,12 @@ static int device_suspend(struct device *dev)
 
 	return __device_suspend(dev, pm_transition, false);
 }
-
+#if CONFIG_ARCH_GEN3
+int suspend_device(struct device *dev, pm_message_t state)
+{
+       return  __device_suspend(dev, state, false);
+}
+#endif
 /**
  * dpm_suspend - Execute "suspend" callbacks for all non-sysdev devices.
  * @state: PM transition of the system being carried out.

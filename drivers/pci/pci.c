@@ -6,6 +6,12 @@
  *
  *	Copyright 1997 -- 2000 Martin Mares <mj@ucw.cz>
  */
+/******************************************************************
+
+ Includes Intel Corporation's changes/modifications dated: 03/2013.
+ Changed/modified portions - Copyright(c) 2013, Intel Corporation.
+
+******************************************************************/
 
 #include <linux/kernel.h>
 #include <linux/delay.h>
@@ -197,7 +203,7 @@ static int __pci_bus_find_cap_start(struct pci_bus *bus,
 }
 
 /**
- * pci_find_capability - query for devices' capabilities 
+ * pci_find_capability - query for devices' capabilities
  * @dev: PCI device to query
  * @cap: capability code
  *
@@ -206,12 +212,12 @@ static int __pci_bus_find_cap_start(struct pci_bus *bus,
  * device's PCI configuration space or 0 in case the device does not
  * support it.  Possible values for @cap:
  *
- *  %PCI_CAP_ID_PM           Power Management 
- *  %PCI_CAP_ID_AGP          Accelerated Graphics Port 
- *  %PCI_CAP_ID_VPD          Vital Product Data 
- *  %PCI_CAP_ID_SLOTID       Slot Identification 
+ *  %PCI_CAP_ID_PM           Power Management
+ *  %PCI_CAP_ID_AGP          Accelerated Graphics Port
+ *  %PCI_CAP_ID_VPD          Vital Product Data
+ *  %PCI_CAP_ID_SLOTID       Slot Identification
  *  %PCI_CAP_ID_MSI          Message Signalled Interrupts
- *  %PCI_CAP_ID_CHSWP        CompactPCI HotSwap 
+ *  %PCI_CAP_ID_CHSWP        CompactPCI HotSwap
  *  %PCI_CAP_ID_PCIX         PCI-X
  *  %PCI_CAP_ID_EXP          PCI Express
  */
@@ -227,13 +233,13 @@ int pci_find_capability(struct pci_dev *dev, int cap)
 }
 
 /**
- * pci_bus_find_capability - query for devices' capabilities 
+ * pci_bus_find_capability - query for devices' capabilities
  * @bus:   the PCI bus to query
  * @devfn: PCI device to query
  * @cap:   capability code
  *
  * Like pci_find_capability() but works for pci devices that do not have a
- * pci_dev structure set up yet. 
+ * pci_dev structure set up yet.
  *
  * Returns the address of the requested capability structure within the
  * device's PCI configuration space or 0 in case the device does not
@@ -514,7 +520,7 @@ static int pci_raw_set_power_state(struct pci_dev *dev, pci_power_t state)
 		return -EINVAL;
 
 	/* Validate current state:
-	 * Can enter D0 from any state, but if we can only go deeper 
+	 * Can enter D0 from any state, but if we can only go deeper
 	 * to sleep if we're already in a low power state
 	 */
 	if (state != PCI_D0 && dev->current_state <= PCI_D3cold
@@ -790,6 +796,14 @@ int pci_set_power_state(struct pci_dev *dev, pci_power_t state)
 
 	return error;
 }
+#ifdef CONFIG_ARCH_GEN3
+static int pci_pmcap_exception(struct pci_dev *dev)
+{
+       if((dev->vendor == 0x8086) && (dev->device == 0x070b))
+               return 1;
+       return 0;
+}
+#endif
 
 /**
  * pci_choose_state - Choose the power state of a PCI device
@@ -805,9 +819,13 @@ pci_power_t pci_choose_state(struct pci_dev *dev, pm_message_t state)
 {
 	pci_power_t ret;
 
+#ifdef CONFIG_ARCH_GEN3
+       if ((!pci_pmcap_exception(dev)) && (!pci_find_capability(dev, PCI_CAP_ID_PM)))
+               return PCI_D0;
+#else
 	if (!pci_find_capability(dev, PCI_CAP_ID_PM))
 		return PCI_D0;
-
+#endif
 	ret = platform_pci_choose_state(dev);
 	if (ret != PCI_POWER_ERROR)
 		return ret;
@@ -994,7 +1012,7 @@ static void pci_restore_config_space(struct pci_dev *pdev)
 	}
 }
 
-/** 
+/**
  * pci_restore_state - Restore the saved state of a PCI device
  * @dev: - PCI device that we're dealing with
  */
@@ -1739,6 +1757,28 @@ int pci_wake_from_d3(struct pci_dev *dev, bool enable)
 pci_power_t pci_target_state(struct pci_dev *dev)
 {
 	pci_power_t target_state = PCI_D3hot;
+#ifdef CONFIG_ARCH_GEN3
+	unsigned int id;
+#endif
+
+#ifdef CONFIG_ARCH_GEN3
+	intelce_get_soc_info(&id, NULL);
+
+	if (CE2600_SOC_DEVICE_ID == id) {
+		if (((PCI_VENDOR_ID_INTEL == dev->vendor) && (CE2600_SOC_DEVICE_ID == dev->device)) ||
+			((PCI_VENDOR_ID_INTEL == dev->vendor) && (PCI_DEVICE_ID_AVM_B1 == dev->device)) ||
+			((PCI_VENDOR_ID_INTEL == dev->vendor) && (INTELCE_EMMC_PCI_DEVICE_ID == dev->device)) ||
+			((PCI_VENDOR_ID_INTEL == dev->vendor) && (INTELCE_SFLASH_PCI_DEVICE_ID == dev->device)) ||
+			((PCI_VENDOR_ID_INTEL == dev->vendor) && (INTELCE_GPIO_PCI_DEVICE_ID == dev->device)) ||
+			((PCI_VENDOR_ID_INTEL == dev->vendor) && (INTELCE_CP_TOP_PCI_DEVICE_ID == dev->device)) ||
+			((PCI_VENDOR_ID_INTEL == dev->vendor) && (INTELCE_DOCSIS_PCI_DEVICE_ID == dev->device)) ||
+			((PCI_VENDOR_ID_INTEL == dev->vendor) && (INTELCE_DOCSIS_DMA_PCI_DEVICE_ID == dev->device)) ||
+			((PCI_VENDOR_ID_INTEL == dev->vendor) && (INTELCE_L2_SWITCH_PCI_DEVICE_ID == dev->device)) ||
+			((PCI_VENDOR_ID_INTEL == dev->vendor) && (INTELCE_HWMUTEX_PCI_DEVICE_ID == dev->device))) {
+			return PCI_D0;
+		}
+	}
+#endif
 
 	if (platform_pci_power_manageable(dev)) {
 		/*
@@ -2541,7 +2581,7 @@ static int __pci_request_region(struct pci_dev *pdev, int bar, const char *res_n
 
 	if (pci_resource_len(pdev, bar) == 0)
 		return 0;
-		
+
 	if (pci_resource_flags(pdev, bar) & IORESOURCE_IO) {
 		if (!request_region(pci_resource_start(pdev, bar),
 			    pci_resource_len(pdev, bar), res_name))
@@ -2873,7 +2913,7 @@ pci_set_mwi(struct pci_dev *dev)
 		cmd |= PCI_COMMAND_INVALIDATE;
 		pci_write_config_word(dev, PCI_COMMAND, cmd);
 	}
-	
+
 	return 0;
 }
 
@@ -3569,7 +3609,7 @@ int pcie_set_mps(struct pci_dev *dev, int mps)
 		return -EINVAL;
 
 	v = ffs(mps) - 8;
-	if (v > dev->pcie_mpss) 
+	if (v > dev->pcie_mpss)
 		return -EINVAL;
 	v <<= 5;
 

@@ -143,6 +143,17 @@ static inline int hpet_unregister_irq_handler(irq_handler_t handler)
 	return 0;
 }
 
+#ifdef CONFIG_ARCH_GEN3
+static inline  void hpet_enable_legacy_int(void)
+{
+	return;
+}
+static inline  void hpet_disable_legacy_int(void)
+{
+	return;
+}
+#endif
+
 #endif
 
 /*----------------------------------------------------------------*/
@@ -307,7 +318,6 @@ static void cmos_irq_enable(struct cmos_rtc *cmos, unsigned char mask)
 	rtc_control |= mask;
 	CMOS_WRITE(rtc_control, RTC_CONTROL);
 	hpet_set_rtc_irq_bit(mask);
-
 	cmos_checkintr(cmos, rtc_control);
 }
 
@@ -866,6 +876,9 @@ static int cmos_suspend(struct device *dev)
 			enable_irq_wake(cmos->irq);
 	}
 
+#ifdef CONFIG_ARCH_GEN3
+	hpet_disable_legacy_int();
+#endif
 	dev_dbg(dev, "suspend%s, ctrl %02x\n",
 			(tmp & RTC_AIE) ? ", alarm may wake" : "",
 			tmp);
@@ -889,6 +902,9 @@ static int cmos_resume(struct device *dev)
 	struct cmos_rtc	*cmos = dev_get_drvdata(dev);
 	unsigned char	tmp = cmos->suspend_ctrl;
 
+#ifdef CONFIG_ARCH_GEN3
+	hpet_enable_legacy_int();
+#endif
 	/* re-enable any irqs previously active */
 	if (tmp & RTC_IRQMASK) {
 		unsigned char	mask;

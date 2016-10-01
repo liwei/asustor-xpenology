@@ -813,6 +813,11 @@ static void __init parse_setup_data(void)
 		case SETUP_DTB:
 			add_dtb(pa_data);
 			break;
+#ifdef CONFIG_ARCH_GEN3
+		case SETUP_BOARD_TYPE:
+			intelce_set_board_type(readl(data->data));
+			break;
+#endif
 		default:
 			break;
 		}

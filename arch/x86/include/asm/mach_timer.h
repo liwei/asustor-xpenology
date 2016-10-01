@@ -10,6 +10,16 @@
  * directly because of the awkward 8-bit access mechanism of the 82C54
  * device.
  */
+
+/******************************************************************
+
+ Includes Intel Corporation's changes/modifications dated: 03/2013.
+ Changed/modified portions - Copyright(c) 2013, Intel Corporation.
+
+******************************************************************/
+
+
+
 #ifndef _ASM_X86_MACH_DEFAULT_MACH_TIMER_H
 #define _ASM_X86_MACH_DEFAULT_MACH_TIMER_H
 
@@ -39,9 +49,31 @@ static inline void mach_prepare_counter(void)
 static inline void mach_countup(unsigned long *count_p)
 {
 	unsigned long count = 0;
+/*
+ * The following code is for Intel Media SOC Gen3 B0 and B1 workaround.
+*/
+#ifdef CONFIG_ARCH_GEN3
+/*
+ * The 8254 timer flop has an issue between the reset and set pin of a flop.
+ * This causes a race condition to happen and the value can change based on
+ * clock sku. The workaround for this silicon issue uses a polling method which
+ * is not affected by race condition. If this workaround is not applied, then the
+ * cpu MHz entry in /proc/cpuinfo may show the wrong information. This workaround
+ * is for errata number 22 in Errata - A Step.
+*/
+	u8 count1;
+	u8 count2;
+	do {
+		count++;
+		outb(0x80, 0x43);
+		count1 = inb(0x42);
+		count2 = inb(0x42);
+	} while (count1 >= 0x20 || count2 != 0);
+#else
 	do {
 		count++;
 	} while ((inb_p(0x61) & 0x20) == 0);
+#endif
 	*count_p = count;
 }
 

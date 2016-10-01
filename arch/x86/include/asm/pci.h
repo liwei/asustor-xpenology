@@ -187,6 +187,38 @@ cpumask_of_pcibus(const struct pci_bus *bus)
 }
 #endif
 
+#ifdef CONFIG_ARCH_GEN3
+
+#define INTELCE_EMMC_PCI_DEVICE_ID       0x070b
+#define INTELCE_SFLASH_PCI_DEVICE_ID     0x08a0
+#define INTELCE_HWMUTEX_PCI_DEVICE_ID    0x0949
+#define INTELCE_GPIO_PCI_DEVICE_ID       0x2e67
+#define INTELCE_CP_TOP_PCI_DEVICE_ID     0x2e52
+#define INTELCE_DOCSIS_PCI_DEVICE_ID     0x0946
+#define INTELCE_DOCSIS_DMA_PCI_DEVICE_ID     0x0948
+#define INTELCE_L2_SWITCH_PCI_DEVICE_ID      0x0947
+
+#define CE3100_SOC_DEVICE_ID 0x2E50
+#define CE4100_SOC_DEVICE_ID 0x0708
+#define CE4200_SOC_DEVICE_ID 0x0709
+#define CE5300_SOC_DEVICE_ID 0x0C40
+#define CE2600_SOC_DEVICE_ID 0x0931
+
+int intelce_get_soc_info(unsigned int *id, unsigned int *rev);
+
+int intelce_set_board_type(unsigned int board);
+int intelce_get_board_type(unsigned int *board);
+
+enum ce2600_board_type {
+ HP_BOARD_TYPE = 0,
+ HP_MG_BOARD_TYPE,
+ FM_BOARD_TYPE,
+ CAT_ISLAND_BOARD_TYPE,
+ GS_BOARD_TYPE,
+ CR_BOARD_TYPE,
+};
+#endif
+
 struct pci_setup_rom {
 	struct setup_data data;
 	uint16_t vendor;

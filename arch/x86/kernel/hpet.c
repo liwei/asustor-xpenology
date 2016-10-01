@@ -283,7 +283,20 @@ static void hpet_resume_counter(struct clocksource *cs)
 	hpet_restart_counter();
 }
 
+#ifdef CONFIG_ARCH_GEN3
+void hpet_disable_legacy_int(void)
+{
+	unsigned int cfg = hpet_readl(HPET_CFG);
+
+	cfg &= ~HPET_CFG_LEGACY;
+	hpet_writel(cfg, HPET_CFG);
+	hpet_legacy_int_enabled = 0;
+}
+
+void hpet_enable_legacy_int(void)
+#else
 static void hpet_enable_legacy_int(void)
+#endif
 {
 	unsigned int cfg = hpet_readl(HPET_CFG);
 

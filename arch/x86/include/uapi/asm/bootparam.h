@@ -7,6 +7,11 @@
 #define SETUP_DTB			2
 #define SETUP_PCI			3
 
+#ifdef CONFIG_ARCH_GEN3
+#define SETUP_BOARD_TYPE          (0x1000)
+#define SETUP_GMAC_PHY_MODE          (0x1001)
+#endif
+
 /* ram_size flags */
 #define RAMDISK_IMAGE_START_MASK	0x07FF
 #define RAMDISK_PROMPT_FLAG		0x8000
