@@ -529,6 +529,39 @@ config ARCH_GEN3
 	bool "Enable Intel Media SOC Gen3 support"
 	default y
 
+config HW_MUTEXES
+        tristate "MUTEX controller support for Intel CE2600 platform"
+        depends on ARCH_GEN3
+        default y
+         ---help---
+          This is the MUTEX controller support for Intel CE2600 platform.
+          If unsure, say Y.
+
+
+choice
+        depends on HW_MUTEXES
+        prompt "MUTEX controller support for Intel CE2600 platform"
+        default MUTEX_FIFO
+        help
+        Allows the configuration of the MUTEX controller working mode in Intel CE platform
+
+       config MUTEX_FIFO
+                bool "FIFO scheduler"
+       help
+        Mutex works in FIFO scheduler mode, which is the default behaviour
+
+       config  MUTEX_NULL
+                bool "Null scheduler"
+        help
+        Mutex works in Null scheduler mode
+
+      config MUTEX_POLLING
+                bool "Polling mode"
+       help
+         works in polling mode, interrupt is disabled
+
+endchoice
+
 endmenu
 
 config X86_VISWS
