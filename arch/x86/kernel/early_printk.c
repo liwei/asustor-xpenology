@@ -18,6 +18,9 @@
 #include <asm/pgtable.h>
 #include <linux/usb/ehci_def.h>
 
+#ifdef CONFIG_ARCH_GEN3
+#include <asm/serial.h>
+#endif
 /* Simple VGA output */
 #define VGABASE		(__ISA_IO_base + 0xb8000)
 
@@ -146,7 +149,11 @@ static __init void early_serial_init(char *s)
 	outb(0x3, early_serial_base + LCR);	/* 8n1 */
 	outb(0, early_serial_base + IER);	/* no interrupt */
 	outb(0, early_serial_base + FCR);	/* no fifo */
+#ifdef CONFIG_ARCH_GEN3
+	outb(0x0, early_serial_base + MCR);	/* DTR + RTS */
+#else
 	outb(0x3, early_serial_base + MCR);	/* DTR + RTS */
+#endif
 
 	if (*s) {
 		baud = simple_strtoul(s, &e, 0);
@@ -154,7 +161,11 @@ static __init void early_serial_init(char *s)
 			baud = DEFAULT_BAUD;
 	}
 
+#ifdef CONFIG_ARCH_GEN3
+	divisor = BASE_BAUD/baud;
+#else
 	divisor = 115200 / baud;
+#endif
 	c = inb(early_serial_base + LCR);
 	outb(c | DLAB, early_serial_base + LCR);
 	outb(divisor & 0xff, early_serial_base + DLL);

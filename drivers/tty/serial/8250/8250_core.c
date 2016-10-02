@@ -47,6 +47,11 @@
 
 #include "8250.h"
 
+#ifdef CONFIG_GEN3_UART
+#include <linux/pci.h>
+#define CE2600_SERIAL_8250_NR_UARTS 2
+#endif
+
 /*
  * Configuration:
  *   share_irqs - whether we pass IRQF_SHARED to request_irq().  This option
@@ -232,10 +237,23 @@ static const struct serial8250_config uart_config[] = {
 		.flags		= UART_CAP_FIFO | UART_NATSEMI,
 	},
 	[PORT_XSCALE] = {
+/*
+ * The following code is for Intel Media SOC Gen3 base support.
+*/
+#ifdef CONFIG_GEN3_UART
+/*
+ * Since we have legal issue to use "Xscale", so change it to "GEN3_serial".
+*/
+       .name       = "GEN3_serial",
+       .fifo_size  = 64,
+       .tx_loadsz  = 64,
+       .fcr        = UART_FCR_ENABLE_FIFO | UART_FCR_DMA_SELECT | UART_FCR_R_TRIG_10,
+#else
 		.name		= "XScale",
 		.fifo_size	= 32,
 		.tx_loadsz	= 32,
 		.fcr		= UART_FCR_ENABLE_FIFO | UART_FCR_R_TRIG_10,
+#endif
 		.flags		= UART_CAP_FIFO | UART_CAP_UUE | UART_CAP_RTOIE,
 	},
 	[PORT_OCTEON] = {
@@ -830,7 +848,7 @@ static int broken_efr(struct uart_8250_port *up)
 	/*
 	 * Exar ST16C2550 "A2" devices incorrectly detect as
 	 * having an EFR, and report an ID of 0x0201.  See
-	 * http://linux.derkeiler.com/Mailing-Lists/Kernel/2004-11/4812.html 
+	 * http://linux.derkeiler.com/Mailing-Lists/Kernel/2004-11/4812.html
 	 */
 	if (autoconfig_read_divisor_id(up) == 0x0201 && size_fifo(up) == 16)
 		return 1;
@@ -1054,6 +1072,9 @@ static void autoconfig(struct uart_8250_port *up, unsigned int probeflags)
 	struct uart_port *port = &up->port;
 	unsigned long flags;
 	unsigned int old_capabilities;
+#ifdef CONFIG_GEN3_UART
+	unsigned int id;
+#endif
 
 	if (!port->iobase && !port->mapbase && !port->membase)
 		return;
@@ -1068,7 +1089,14 @@ static void autoconfig(struct uart_8250_port *up, unsigned int probeflags)
 	spin_lock_irqsave(&port->lock, flags);
 
 	up->capabilities = 0;
-	up->bugs = 0;
+#ifdef CONFIG_GEN3_UART
+	/* do not enable modem status interrupt for IntelCE uart0 port */
+	intelce_get_soc_info(&id, NULL);
+	if((CE4200_SOC_DEVICE_ID == id) && (0 == serial_index(&up->port)))
+		up->bugs = UART_BUG_NOMSR;
+	else
+#endif
+		up->bugs = 0;
 
 	if (!(port->flags & UPF_BUGGY_UART)) {
 		/*
@@ -1185,7 +1213,7 @@ static void autoconfig(struct uart_8250_port *up, unsigned int probeflags)
 	serial_out(up, UART_LCR, save_lcr);
 
 	port->fifosize = uart_config[up->port.type].fifo_size;
-	old_capabilities = up->capabilities; 
+	old_capabilities = up->capabilities;
 	up->capabilities = uart_config[port->type].flags;
 	up->tx_loadsz = uart_config[port->type].tx_loadsz;
 
@@ -1588,6 +1616,141 @@ static int exar_handle_irq(struct uart_port *port)
 }
 
 /*
+ * The following code is for Intel Media SOC Gen3 B0 and B1 workaround.
+ */
+#ifdef CONFIG_GEN3_UART
+/*
+ * The UART Tx interrupts are not set under some conditions and therefore serial
+ * transmission hangs. This is a silicon issue and has not been root caused. The
+ * workaround for this silicon issue checks UART_LSR_THRE bit and UART_LSR_TEMT
+ * bit of LSR register in interrupt handler to see whether at least one of these
+ * two bits is set, if so then process the transmit request. If this workaround
+ * is not applied, then the serial transmission may hang. This workaround is for
+ * errata number 9 in Errata - B step.
+ */
+#define serial_outp(up, offset, value)  serial_out(up, offset, value)
+
+static void transmit_chars(struct uart_8250_port *up)
+{
+	struct circ_buf *xmit = &up->port.state->xmit;
+	int count;
+
+	if (up->port.x_char) {
+		serial_outp(up, UART_TX, up->port.x_char);
+		up->port.icount.tx++;
+		up->port.x_char = 0;
+		return;
+	}
+	if (uart_tx_stopped(&up->port)) {
+		serial8250_stop_tx(&up->port);
+		return;
+	}
+	if (uart_circ_empty(xmit)) {
+		__stop_tx(up);
+		return;
+	}
+
+	count = up->tx_loadsz;
+	do {
+		serial_out(up, UART_TX, xmit->buf[xmit->tail]);
+		xmit->tail = (xmit->tail + 1) & (UART_XMIT_SIZE - 1);
+		up->port.icount.tx++;
+		if (uart_circ_empty(xmit))
+			break;
+	} while (--count > 0);
+
+	if (uart_circ_chars_pending(xmit) < WAKEUP_CHARS)
+		uart_write_wakeup(&up->port);
+
+	DEBUG_INTR("THRE...");
+
+	if (uart_circ_empty(xmit))
+		__stop_tx(up);
+}
+
+/*
+ * This is the serial driver's interrupt routine.
+ *
+ * Arjan thinks the old way was overly complex, so it got simplified.
+ * Alan disagrees, saying that need the complexity to handle the weird
+ * nature of ISA shared interrupts.  (This is a special exception.)
+ *
+ * In order to handle ISA shared interrupts properly, we need to check
+ * that all ports have been serviced, and therefore the ISA interrupt
+ * line has been de-asserted.
+ *
+ * This means we need to loop through all ports. checking that they
+ * don't have an interrupt pending.
+ */
+
+static irqreturn_t serial8250_interrupt(int irq, void *dev_id)
+{
+	struct irq_info *i = dev_id;
+	struct list_head *l, *end = NULL;
+	int pass_counter = 0, handled = 0;
+	unsigned int my_flags, ier, lsr;
+
+	DEBUG_INTR("serial8250_interrupt(%d)...", irq);
+
+	spin_lock(&i->lock);
+
+	l = i->head;
+	do {
+		struct uart_8250_port *up;
+		struct uart_port *port;
+		my_flags = 0x00;
+
+		up = list_entry(l, struct uart_8250_port, list);
+		port = &up->port;
+
+		if (port->handle_irq(port)) {
+			my_flags |= 0x01;
+			handled = 1;
+			end = NULL;
+		}
+		ier = serial_in(up, UART_IER);
+		/* see if the UART's XMIT interrupt is enabled */
+		if(ier & UART_IER_THRI) {
+			lsr = serial_in(up, UART_LSR);
+			/* now check to see if the UART should be
+			   generating an interrupt (but isn't) */
+			if(lsr & (UART_LSR_THRE | UART_LSR_TEMT)) {
+				/* handle as though we really got the IRQ */
+				spin_lock(&up->port.lock);
+				transmit_chars(up);	/* XMIT only */
+				spin_unlock(&up->port.lock);
+
+				my_flags |= 0x02;  /* handle the old else */
+
+				handled = 1;
+
+				end = NULL;
+			}
+		}
+		/* this was the else in the old code */
+		if(0x00 == my_flags) {
+			if (end == NULL)
+				end = l;
+		}
+
+		l = l->next;
+
+		if (l == i->head && pass_counter++ > PASS_LIMIT) {
+			/* If we hit this, we're dead. */
+			printk_ratelimited(KERN_ERR
+					"serial8250: too much work for irq%d\n", irq);
+			break;
+		}
+	} while (l != end);
+
+	spin_unlock(&i->lock);
+
+	DEBUG_INTR("end.\n");
+
+	return IRQ_RETVAL(handled);
+}
+#else
+/*
  * This is the serial driver's interrupt routine.
  *
  * Arjan thinks the old way was overly complex, so it got simplified.
@@ -1630,7 +1793,7 @@ static irqreturn_t serial8250_interrupt(int irq, void *dev_id)
 		if (l == i->head && pass_counter++ > PASS_LIMIT) {
 			/* If we hit this, we're dead. */
 			printk_ratelimited(KERN_ERR
-				"serial8250: too much work for irq%d\n", irq);
+					"serial8250: too much work for irq%d\n", irq);
 			break;
 		}
 	} while (l != end);
@@ -1641,6 +1804,7 @@ static irqreturn_t serial8250_interrupt(int irq, void *dev_id)
 
 	return IRQ_RETVAL(handled);
 }
+#endif
 
 /*
  * To support ISA shared interrupts, we need to have one interrupt
@@ -2776,6 +2940,9 @@ static void __init serial8250_isa_init_ports(void)
 	struct uart_8250_port *up;
 	static int first = 1;
 	int i, irqflag = 0;
+#ifdef CONFIG_GEN3_UART
+	uint32_t id;
+#endif
 
 	if (!first)
 		return;
@@ -2783,6 +2950,12 @@ static void __init serial8250_isa_init_ports(void)
 
 	if (nr_uarts > UART_NR)
 		nr_uarts = UART_NR;
+
+#ifdef CONFIG_GEN3_UART
+	intelce_get_soc_info(&id, NULL);
+	if(CE2600_SOC_DEVICE_ID == id)
+		nr_uarts = CE2600_SERIAL_8250_NR_UARTS;
+#endif
 
 	for (i = 0; i < nr_uarts; i++) {
 		struct uart_8250_port *up = &serial8250_ports[i];
@@ -2903,10 +3076,20 @@ serial8250_console_write(struct console *co, const char *s, unsigned int count)
 	 */
 	ier = serial_port_in(port, UART_IER);
 
+	/*
+	 * The following code is for Intel Media SOC Gen3 base support.
+	 */
+#ifdef CONFIG_GEN3_UART
+	/*
+	 * Should enable UUE (Uart Unit Enable) bit.
+	 */
+	serial_out(up, UART_IER, UART_IER_UUE);
+#else
 	if (up->capabilities & UART_CAP_UUE)
 		serial_port_out(port, UART_IER, UART_IER_UUE);
 	else
 		serial_port_out(port, UART_IER, 0);
+#endif
 
 	uart_console_write(port, s, count, serial8250_console_putchar);
 

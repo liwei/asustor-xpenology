@@ -1,5 +1,5 @@
 #include "boot.h"
-
+#include <asm/serial.h>
 #define DEFAULT_SERIAL_PORT 0x3f8 /* ttyS0 */
 
 #define XMTRDY          0x20
@@ -28,9 +28,9 @@ static void early_serial_init(int port, int baud)
 	outb(0x3, port + LCR);	/* 8n1 */
 	outb(0, port + IER);	/* no interrupt */
 	outb(0, port + FCR);	/* no fifo */
-	outb(0x3, port + MCR);	/* DTR + RTS */
+	outb(0x0, port + MCR);	/* DTR + RTS */
 
-	divisor	= 115200 / baud;
+	divisor	= BASE_BAUD/baud;
 	c = inb(port + LCR);
 	outb(c | DLAB, port + LCR);
 	outb(divisor & 0xff, port + DLL);
@@ -95,7 +95,6 @@ static void parse_earlyprintk(void)
 		early_serial_init(port, baud);
 }
 
-#define BASE_BAUD (1843200/16)
 static unsigned int probe_baud(int port)
 {
 	unsigned char lcr, dll, dlh;

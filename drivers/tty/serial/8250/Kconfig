@@ -58,6 +58,13 @@ config SERIAL_8250_PNP
 	  This builds standard PNP serial support. You may be able to
 	  disable this feature if you only need legacy serial support.
 
+config GEN3_UART
+	bool "Intel Media SOC Gen3 UART support"
+	depends on SERIAL_8250 && ARCH_GEN3
+	default y
+	---help---
+	  This option enables Intel Media SOC Gen3 UART support.
+
 config SERIAL_8250_CONSOLE
 	bool "Console on 8250/16550 and compatible serial port"
 	depends on SERIAL_8250=y
