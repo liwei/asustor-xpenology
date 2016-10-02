@@ -404,7 +404,7 @@ int SYNOMTDModifyFisInfo(struct mtd_info *mtd, struct SYNO_MTD_FIS_INFO SynoMtdF
 				printk(KERN_NOTICE "Failed to erase [%s], error [%d]\n", mtd->name, eraseret*(-1));
 			}
 			else {
-				/*ret = mtd->write(mtd, sizeof(struct fis_image_desc)*i, 
+				/*ret = mtd->write(mtd, sizeof(struct fis_image_desc)*i,
 				sizeof(struct fis_image_desc), &retlen, &buf[i]);*/
 				ret = mtd_write(mtd, 0, PAGE_SIZE, &retlen, (const u_char*)buf);
 				if (ret) {

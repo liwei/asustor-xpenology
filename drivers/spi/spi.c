@@ -518,6 +518,30 @@ int spi_register_board_info(struct spi_board_info const *info, unsigned n)
 
 	return 0;
 }
+#ifdef CONFIG_GEN3_SPI
+EXPORT_SYMBOL_GPL(spi_register_board_info);
+
+int spi_unregister_board_info(struct spi_board_info  *info, unsigned n)
+{
+	struct boardinfo        *bi,*temp;
+	int i;
+
+	for (i = 0; i < n; i++, info++) {
+		mutex_lock(&board_lock);
+		list_for_each_entry_safe(bi, temp, &board_list, list) {
+			if (!memcmp(&bi->board_info, info, sizeof(*info))) {
+				list_del(&bi->list);
+				kfree(bi);
+				break;
+			}
+		}
+		mutex_unlock(&board_lock);
+	}
+	return 0;
+}
+
+EXPORT_SYMBOL_GPL(spi_unregister_board_info);
+#endif
 
 /*-------------------------------------------------------------------------*/
 

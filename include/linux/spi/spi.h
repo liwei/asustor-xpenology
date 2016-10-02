@@ -15,6 +15,12 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
+/******************************************************************
+
+ Includes Intel Corporation's changes/modifications dated: 3/2013.
+ Changed/modified portions - Copyright(c) 2011-2013, Intel Corporation.
+
+******************************************************************/
 
 #ifndef __LINUX_SPI_H
 #define __LINUX_SPI_H
@@ -86,6 +92,8 @@ struct spi_device {
 #define	SPI_MODE_2	(SPI_CPOL|0)
 #define	SPI_MODE_3	(SPI_CPOL|SPI_CPHA)
 #define	SPI_CS_HIGH	0x04			/* chipselect active high? */
+#define SPI_MODE_QUAD_IO 0x05                   /* Quad IO mode using 4 wire */
+#define SPI_MODE_DUAL_IO 0x06                   /* Dual IO mode using 2 wire */
 #define	SPI_LSB_FIRST	0x08			/* per-word bits-on-wire */
 #define	SPI_3WIRE	0x10			/* SI/SO signals shared */
 #define	SPI_LOOP	0x20			/* loopback mode */
@@ -305,6 +313,9 @@ struct spi_master {
 	 * would normally use bus_num=2 for that controller.
 	 */
 	s16			bus_num;
+
+    /*  using_slave is to recognize the slave controller, slave controller is considrer to fake into one master with one spi device*/
+    u16 using_slave;
 
 	/* chipselects will be integral to many controllers; some others
 	 * might use board-specific GPIOs.
@@ -896,6 +907,9 @@ struct spi_board_info {
 #ifdef	CONFIG_SPI
 extern int
 spi_register_board_info(struct spi_board_info const *info, unsigned n);
+#ifdef CONFIG_GEN3_SPI
+extern int spi_unregister_board_info(struct spi_board_info *info, unsigned n);
+#endif
 #else
 /* board init code may ignore whether SPI is configured or not */
 static inline int

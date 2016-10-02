@@ -1,8 +1,20 @@
 #ifndef LINUX_SPI_FLASH_H
 #define LINUX_SPI_FLASH_H
+/******************************************************************
+
+ Includes Intel Corporation's changes/modifications dated: 3/2013.
+ Changed/modified portions - Copyright(c) 2011-2013, Intel Corporation.
+
+******************************************************************/
+
 
 struct mtd_partition;
 
+/* Device info for each chip select */
+struct flash_cs_info{
+	unsigned int cs0_size;		/* flash size in cs0 */
+	unsigned int cs1_size;		/* chip size in cs1   */
+};
 /**
  * struct flash_platform_data: board-specific flash data
  * @name: optional flash device name (eg, as used with mtdparts=)
@@ -26,6 +38,7 @@ struct flash_platform_data {
 	char		*type;
 
 	/* we'll likely add more ... use JEDEC IDs, etc */
+
 };
 
 #endif

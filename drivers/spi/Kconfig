@@ -35,6 +35,13 @@ config SPI_DEBUG
 	  Say "yes" to enable debug messaging (like dev_dbg and pr_debug),
 	  sysfs, and debugfs support in SPI controller and protocol drivers.
 
+config GEN3_SPI
+        bool "Intel Media SOC SPI support"
+        depends on SPI && ARCH_GEN3
+        default y
+        help
+          This option enables Intel Media SOC SPI support.
+
 #
 # MASTER side ... talking to discrete SPI slave chips including microcontrollers
 #
@@ -85,6 +92,13 @@ config SPI_BCM2835
 	  "universal SPI master", and the regular SPI controller. This driver
 	  is for the regular SPI controller. Slave mode operation is not also
 	  not supported.
+
+config SPI_CE5XX_SPI_FLASH
+	tristate "CE5XX_SPI_FLASH"
+	depends on ARCH_GEN3 && HW_MUTEXES
+	default y
+	help
+	  This selects a driver for CE5XX Serial Flash controller
 
 config SPI_BFIN5XX
 	tristate "SPI controller driver for ADI Blackfin5xx"
@@ -344,6 +358,11 @@ config SPI_RSPI
 	depends on SUPERH
 	help
 	  SPI driver for Renesas RSPI blocks.
+
+config SPI_CE5XX_SPI_SLAVE
+	tristate "CE5XX SPI SLAVE"
+	help
+	  This selects a driver for CE5XX SPI Slave controler, it is emudulated into a spi device
 
 config SPI_S3C24XX
 	tristate "Samsung S3C24XX series SPI"
