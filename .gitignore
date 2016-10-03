@@ -95,3 +95,5 @@ x509.genkey
 fs/aufs/conf.str
 fs/aufs/conf.str.tmp
 include/linux/syno_autoconf.h
+include/linux/autoconf.h
+*.rej
