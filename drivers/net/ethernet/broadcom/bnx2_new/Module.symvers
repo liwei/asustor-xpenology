@@ -1,0 +1,5 @@
+0x00000000	cnic_register_driver	drivers/net/ethernet/broadcom/bnx2_new/cnic	EXPORT_SYMBOL
+0x00000000	cnic_dump_kcq	drivers/net/ethernet/broadcom/bnx2_new/cnic	EXPORT_SYMBOL
+0x00000000	cnic_register_driver2	drivers/net/ethernet/broadcom/bnx2_new/cnic	EXPORT_SYMBOL
+0x00000000	cnic_unregister_driver	drivers/net/ethernet/broadcom/bnx2_new/cnic	EXPORT_SYMBOL
+0x00000000	cnic_unregister_driver2	drivers/net/ethernet/broadcom/bnx2_new/cnic	EXPORT_SYMBOL

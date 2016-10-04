@@ -1,0 +1,9 @@
+o	Testing
+o	More testing
+o	add %postun (uninstall.sh) script to rpm
+o	I/O size increase
+o	Add support for CONFIG_PM
+	 pci.suspend(struct pci_dev *pdev, pm_message_t state);
+	 pci.suspend_late(struct pci_dev *pdev, pm_message_t state);
+	 pci.resume_early(struct pci_dev *pdev);
+	 pci.resume(struct pci_dev *pdev);

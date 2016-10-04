@@ -1,0 +1,15 @@
+#
+# Intel pin control drivers
+#
+
+config SYNO_PINCTRL_CHERRYVIEW
+	tristate "Intel Cherryview/Braswell pinctrl and GPIO driver"
+	depends on ACPI
+	depends on SYNO_X86_PINCTRL_GPIO
+	select PINCONF
+	select GENERIC_PINCONF
+	select GPIOLIB
+	help
+	  Partialy backport from linux 4.0 
+	  Cherryview/Braswell pinctrl driver provides an interface that
+	  allows configuring of SoC pins and using them as GPIOs.

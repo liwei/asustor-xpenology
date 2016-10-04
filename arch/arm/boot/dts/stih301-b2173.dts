@@ -1,0 +1,48 @@
+/*
+ * Copyright (C) 2014 STMicroelectronics Limited.
+ * Author: Seraphin Bonnaffe <seraphin.bonnaffe@st.com>
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 2 as
+ * published by the Free Software Foundation.
+ */
+#include "stih301-b21xx.dts"
+/ {
+	model = "STiH301 B2173";
+	compatible = "st,stih301-b2173", "st,stih301", "st,stih410";
+
+	soc {
+#ifdef CONFIG_SYNO_LSP_MONACO_SDK2_15_4
+		pcie0: pcie@9b00000{
+			status = "okay";
+			reset-gpio = <&PIO34 2 0>;
+		};
+
+		/*
+		 * On B2173, PCIe and SATA are exclusive, and PCIe is enabled
+		 * by default. To enable SATA instead, move pcie0 node to
+		 * disabled and move sata and miphy nodes below to okay.
+		 * Note that SATA usage requires b2136 adaptor.
+		 */
+#endif /* CONFIG_SYNO_LSP_MONACO_SDK2_15_4 */
+		miphy28lp_phy0: miphy28lp@0 {
+#ifdef CONFIG_SYNO_LSP_MONACO_SDK2_15_4
+			/* select internal clock for miphy0 (sata) */
+			st,sata_gen = "gen3";
+#endif /* CONFIG_SYNO_LSP_MONACO_SDK2_15_4 */
+			st,px_rx_pol_inv;
+#ifdef CONFIG_SYNO_LSP_MONACO_SDK2_15_4
+			status = "disabled";
+#endif /* CONFIG_SYNO_LSP_MONACO_SDK2_15_4 */
+		};
+#ifdef CONFIG_SYNO_LSP_MONACO_SDK2_15_4
+		sata0: sata@9b20000 {
+			status = "disabled";
+		};
+#endif /* CONFIG_SYNO_LSP_MONACO_SDK2_15_4 */
+
+		snd_uni_player0: snd-uni-player@0 {
+			status = "okay";
+		};
+	};
+};

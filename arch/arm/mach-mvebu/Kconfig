@@ -1,0 +1,106 @@
+config ARCH_MVEBU
+	bool "Marvell SOCs with Device Tree support" if ARCH_MULTI_V7
+	select ARCH_SUPPORTS_BIG_ENDIAN if SYNO_LSP_ARMADA
+	select CLKSRC_MMIO
+	select COMMON_CLK
+	select GENERIC_CLOCKEVENTS
+	select GENERIC_IRQ_CHIP
+	select IRQ_DOMAIN
+	select MULTI_IRQ_HANDLER
+	select PINCTRL
+	select PLAT_ORION
+	select SPARSE_IRQ
+	select CLKDEV_LOOKUP
+	select MVEBU_CLK_CORE
+	select MVEBU_CLK_CPU
+	select MVEBU_CLK_GATING
+	select MVEBU_CLK_COREDIV if SYNO_LSP_ARMADA
+	select MVEBU_MBUS
+	select ZONE_DMA if ARM_LPAE
+	select ARCH_REQUIRE_GPIOLIB
+	select MIGHT_HAVE_PCI if SYNO_LSP_ARMADA
+	select PCI_QUIRKS if PCI && SYNO_LSP_ARMADA
+	select RESET_CONTROLLER if SYNO_LSP_ARMADA
+
+config MVEBU_SOFT_POWEROFF
+	bool "Soft Power Off"
+	depends on SYNO_LSP_ARMADA && ARCH_MVEBU
+	default y
+	help
+	   Say 'Y' here if you want your kernel to support soft power off with WFI.
+	   usage: 'echo 1 > /sys/devices/platform/mv_power_wol/soft_power_idle'
+
+if ARCH_MVEBU
+
+menu "Marvell SOC with device tree"
+
+config MACH_ARMADA_370_XP
+	bool
+	select ARMADA_370_XP_TIMER
+	select HAVE_SMP
+	select CACHE_L2X0
+	select ARM_CPU_SUSPEND if SYNO_LSP_ARMADA
+	select CPU_PJ4B
+
+config MACH_ARMADA_370
+	bool "Marvell Armada 370 boards"
+	select MACH_ARMADA_370_XP
+	select PINCTRL_ARMADA_370
+	help
+	  Say 'Y' here if you want your kernel to support boards based
+	  on the Marvell Armada 370 SoC with device tree.
+
+config MACH_ARMADA_375
+	bool "Marvell Armada 375 boards"
+	depends on SYNO_LSP_ARMADA
+	select ARM_ERRATA_720789
+	select ARM_ERRATA_753970
+	select ARM_NEEDS_SMP_COHERENCY_ON_UP
+	select ARM_GIC
+	select ARMADA_370_XP_TIMER
+	select CACHE_L2X0
+	select ARM_CPU_SUSPEND
+	select CPU_V7
+	select HAVE_SMP
+	select HAVE_ARM_SCU
+	select HAVE_ARM_TWD if LOCAL_TIMERS
+	select NEON
+	select PINCTRL_ARMADA_375
+	select USB_ARCH_HAS_XHCI
+	help
+	  Say 'Y' here if you want your kernel to support boards based
+	  on the Marvell Armada 375 SoC with device tree.
+
+config MACH_ARMADA_380
+	bool "Marvell Armada 380/385 boards"
+	depends on SYNO_LSP_ARMADA
+	select USB_ARCH_HAS_XHCI
+	select ARM_ERRATA_720789
+	select ARM_ERRATA_753970
+	select ARM_NEEDS_SMP_COHERENCY_ON_UP
+	select ARM_GIC
+	select ARMADA_370_XP_TIMER
+	select CACHE_L2X0
+	select ARM_CPU_SUSPEND
+	select CPU_V7
+	select HAVE_SMP
+	select HAVE_ARM_SCU
+	select HAVE_ARM_TWD if LOCAL_TIMERS
+	select NEON
+	select PINCTRL_ARMADA_38X
+	select USB_ARCH_HAS_XHCI
+	help
+	  Say 'Y' here if you want your kernel to support boards based
+	  on the Marvell Armada 380/385 SoC with device tree.
+
+config MACH_ARMADA_XP
+	bool "Marvell Armada XP boards"
+	select MACH_ARMADA_370_XP
+	select PINCTRL_ARMADA_XP
+	help
+	  Say 'Y' here if you want your kernel to support boards based
+	  on the Marvell Armada XP SoC with device tree.
+
+endmenu
+
+endif

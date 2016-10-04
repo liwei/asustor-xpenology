@@ -1,0 +1,52 @@
+/*
+ * Copyright (C) 2014 STMicroelectronics Limited.
+ * Author: Giuseppe Cavallaro <peppe.cavallaro@st.com>
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 2 as
+ * published by the Free Software Foundation.
+ */
+#ifdef CONFIG_SYNO_LSP_MONACO_SDK2_15_4
+#include "stih410-clock.dtsi"
+#include "stih407-family.dtsi"
+#else /* CONFIG_SYNO_LSP_MONACO_SDK2_15_4 */
+#include "stih410cut1.dtsi"
+#endif /* CONFIG_SYNO_LSP_MONACO_SDK2_15_4 */
+
+/ {
+	cpus {
+#ifdef CONFIG_SYNO_LSP_MONACO_SDK2_15_4
+		#address-cells = <1>;
+		#size-cells = <0>;
+		cpu@1 {
+			device_type = "cpu";
+			compatible = "arm,cortex-a9";
+			reg = <1>;
+		};
+	};
+
+	soc {
+		st_dwc3: dwc3@8f94000 {
+			st,gsbuscfg = <0x8 0xF00>;
+		};
+
+		st_usb_bus_config: st-usb-amba-config {
+			st,complete_on_error;
+			st,read_ahead;
+			st,max_opcode_LD64_ST64;
+			st,chunks_in_msg = <0>;
+			st,packets_in_chunk = <2>;
+			st,threshold = <256>;
+#else /* CONFIG_SYNO_LSP_MONACO_SDK2_15_4 */
+		cpu@0 {
+			operating-points = <
+				/* kHz     uV */
+				1500000  1147000
+				1200000  1010000
+				800000   900000
+				400000   900000
+			>;
+#endif /* CONFIG_SYNO_LSP_MONACO_SDK2_15_4 */
+		};
+	};
+};

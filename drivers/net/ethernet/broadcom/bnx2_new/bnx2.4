@@ -1,0 +1,186 @@
+.\" Copyright (c) 2005 - 2014 Broadcom Corporation
+.\" Copyright (c) 2014 QLogic Corporation
+.\" This is free documentation; you can redistribute it and/or
+.\" modify it under the terms of the GNU General Public License as
+.\" published by the Free Software Foundation.
+.\"
+.\" bnx2.4,v 1.5 
+.\"
+.TH bnx2 4 "08/21/14" "QLogic Corporation"
+.\"
+.\" NAME part
+.\"
+.SH NAME
+bnx2 \- QLogic BCM5706/5708/5709/5716 series Gigabit Ethernet device driver
+.\"
+.\" SYNOPSIS part
+.\"
+.SH SYNOPSIS
+.B insmod bnx2.o
+.RB [ disable_msi=\c
+.IR 1 ]
+.PP
+.B insmod bnx2.ko
+.RB [ disable_msi=\c
+.IR 1 ]
+.PP
+.B modprobe bnx2
+.RB [ disable_msi=\c
+.IR 1 ]
+.\"
+.\" DESCRIPTION part
+.\"
+.SH DESCRIPTION
+.I bnx2
+is the network device driver for the QLogic
+.B BCM5706/5708/5709/5716
+series PCI/PCI-X Gigabit Ethernet Network Interface Card (NIC). The driver has
+been tested on all 2.6.x/3.x kernels and 2.4.x kernels from 2.4.24.
+.PP
+Refer to the README.TXT from the driver package on how to
+compile and install the driver.
+.PP
+Refer to various Linux documentations
+on how to configure network protocol and address.
+.\"
+.\" DRIVER DEPENDENCIES part
+.\"
+.SH DRIVER DEPENDENCIES
+The driver uses library functions in the crc32 and zlib_inflate libraries.
+On most kernels, these libraries are already built into the kernel. In
+some cases, it may be necessary to load these library modules before the
+driver or unresolved symbol errors will appear. Using modprobe will
+resolve the dependencies automatically.
+
+In rare cases where the crc32 and zlib_inflate libraries are not enabled
+in the kernel, it will be necessary to compile the kernel again with the
+libraries enabled.
+
+.\"
+.\" DRIVER SETTINGS part
+.\"
+.SH DRIVER SETTINGS
+Driver settings can be queried and changed using \fBethtool\fP. The latest
+ethtool can be downloaded from \fBhttp://sourceforge.net/projects/gkernel\fP
+if it is not already installed. 
+See the ethtool man page for more information. ethtool settings
+do not persist across reboot or module reload. The ethtool commands can be
+put in a startup script such as /etc/rc.local to preserve the settings
+across a reboot. On Red Hat distributions, "ethtool -s" parameters can be
+specified in the ifcfg-ethx scripts using the ETHTOOL_OPTS keyword. The
+specified ethtool parameters will be set during ifup. Example:
+/etc/sysconfig/network-scripts/ifcfg-eth0:
+
+ETHTOOL_OPTS="wol g speed 100 duplex half autoneg off"
+
+.\"
+.\" PARAMETER part
+.\"
+.SH PARAMETERS
+One optional parameter \fBdisable_msi\fP can be supplied as a command line
+argument to the insmod or modprobe command. This parameter is used
+to disable Message Signaled Interrupts (MSI) and MSI-X.  The parameter is
+only valid on 2.6/3.x kernels that support MSI/MSI-X. On 2.4 kernels, this
+parameter cannot be used. By default, the driver will enable MSI or MSI-X if
+it is supported by the kernel. MSI-X is only supported on 5709 devices.  The
+driver will run an interrupt test during initialization to determine if MSI/
+MSI-X is working.  If the test passes, the driver will enable MSI/MSI-X.
+Otherwise, it will use legacy INTx mode.
+.PP
+Set the \fBdisable_msi\fP parameter to 1 as shown below to always disable
+MSI/MSI-X on all QLogic bnx2 Gigabit NICs in the system.
+.PP
+insmod bnx2.ko disable_msi=1
+.PP
+or
+.PP
+modprobe bnx2 disable_msi=1
+.PP
+The parameter can also be set in modprobe.conf. See the man page
+for more information.
+.\"
+.\" DEFAULT SETTINGS part
+.\"
+.SH DEFAULT SETTINGS
+.TP
+Speed :
+Autonegotiation with all speeds advertised
+.TP
+Flow control :
+Autonegotiation with rx and tx advertised
+.TP
+MTU :
+1500 (range 46 - 9000)
+.TP
+Rx Ring Size :
+255 (range 0 - 4080)
+.TP
+Rx Jumbo Ring Size :
+0 (range 0 - 16320) automatically adjusted by the
+driver based on MTU and Rx Ring Size.
+.TP
+Tx Ring Size :
+255 (range (MAX_SKB_FRAGS+1) - 255)
+
+MAX_SKB_FRAGS varies on different kernels and
+different architectures. On a 2.6/3.x kernel for
+x86, MAX_SKB_FRAGS is 18.
+.TP
+Number of RSS channels:
+Varies depending on the number of CPUs on 5709.
+(Range 1 - 8)
+.TP
+Number of TSS channels:
+Varies depending on the number of CPUs on 5709.
+(Range 1 - 8)
+.TP
+Coalesce rx usecs :
+18 (range 0 - 1023)
+.TP
+Coalesce rx usecs irq :
+18 (range 0 - 1023)
+.TP
+Coalesce rx frames :
+12 (range 0 - 255)
+.TP
+Coalesce rx frames irq :
+2 (range 0 - 255)
+.TP
+Coalesce tx usecs :
+80 (range 0 - 1023)
+.TP
+Coalesce tx usecs irq :
+18 (range 0 - 1023)
+.TP
+Coalesce tx frames :
+20 (range 0 - 255)
+.TP
+Coalesce tx frames irq :
+2 (range 0 - 255)
+.TP
+Coalesce stats usecs   :
+999936 (aprox. 1 sec.)
+(range 0 - 16776960 in 256 increments)
+.TP
+MSI/MSI-X :
+Enabled (if supported by 2.6/3.x kernel and interrupt test passes)
+.TP
+TSO :
+Enabled on 2.6/3.x kernels
+.TP
+WoL :
+Initial setting based on NVRAM's setting.
+.\"
+.\" AUTHOR part
+.\"
+.SH AUTHOR
+Michael Chan \- mchan@broadcom.com
+.\"
+.\" SEE ALSO part
+.\"
+.SH SEE ALSO
+.BR ifconfig (8),
+.BR insmod (8),
+.BR modprobe.conf (5),
+.BR ethtool (8).
+

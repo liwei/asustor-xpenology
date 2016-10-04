@@ -1,0 +1,90 @@
+#ifndef MY_ABC_HERE
+#define MY_ABC_HERE
+#endif
+ 
+#ifndef __SYNO_H_
+#define __SYNO_H_
+
+#define XPENOLOGY
+
+#if defined(CONFIG_SYNO_X86) && defined(CONFIG_ARCH_GEN3)
+
+#ifdef MY_DEF_HERE
+#define SYNO_EVANSPORT_TTYS1_PORT	0x2F8
+#define SYNO_EVANSPORT_SET8N1		0x3
+#define SYNO_EVANSPORT_SHUTDOWN_CMD	0x31
+#define SYNO_EVANSPORT_TXR		0
+#define SYNO_EVANSPORT_LCR		3
+#endif
+#endif
+
+#ifdef	CONFIG_SYNO_USB_FLASH_BOOT
+#ifdef	CONFIG_SYNO_X64
+#define IS_SYNO_USBBOOT_ID_VENDOR(VENDOR) (0xF400 == (VENDOR) || 0xF401 == (VENDOR))
+#define IS_SYNO_USBBOOT_ID_PRODUCT(PRODUCT) (0xF400 == (PRODUCT) || 0xF401 == (PRODUCT))
+#else  
+#define IS_SYNO_USBBOOT_ID_VENDOR(VENDOR) (0xF400 == (VENDOR))
+#define IS_SYNO_USBBOOT_ID_PRODUCT(PRODUCT) (0xF400 == (PRODUCT))
+#endif  
+#endif  
+
+#ifdef CONFIG_XPENO_SYNOBOOT_ID
+#define IS_XPENO_USBBOOT_ID_VENDOR(VENDOR) (gSynoVid == (VENDOR))
+#define IS_XPENO_USBBOOT_ID_PRODUCT(PRODUCT) (gSynoPid == (PRODUCT))
+#endif
+
+#ifdef MY_ABC_HERE
+#define SYNO_YOTAWIMAX_DESC          "SYNO CDC Ethernet Device for YotaKey"
+#define SYNO_YOTAWIMAX_ETHERNET_NAME "wm"
+#define SYNO_YOTAWIMAX_NET_NOLINK_EVENT (0xffffffff)
+#endif
+
+#ifdef CONFIG_MACH_SYNOLOGY_6281
+#define SYNO_6281_MTU_WA
+#endif
+
+#define SYNO_FIX_MD_RESIZE_BUSY_LOOP 5
+
+#ifdef CONFIG_SYNO_EXT4_CREATE_TIME_BIG_ENDIAN_SWAP
+#define SYNO_CREATE_TIME_SWAP_VERSION 3719
+#endif
+
+#ifdef CONFIG_SYNO_FS_CASELESS_STAT
+#define SYNO_SMB_PSTRING_LEN 1024
+#endif
+
+#if defined(CONFIG_MV_XOR_MEMCOPY) && (defined(CONFIG_SYNO_LIO) || defined(MY_ABC_HERE))
+#define SYNO_MV_PERF
+#endif  
+
+#ifdef CONFIG_SYNO_MV88F6281_USBSTATION
+#define SYNO_SLOW_DOWN_UEVENT
+#endif
+
+#ifdef MY_ABC_HERE
+#define MAX_CHANNEL_RETRY       2
+#define CHANNEL_RETRY_INTERVAL  (3*HZ)
+
+#endif
+
+#include <uapi/linux/syno.h>
+
+#define SYNO_NFSD_WRITE_SIZE_MIN 131072
+
+#ifdef MY_ABC_HERE
+#define SYNO_NFSD_UDP_MAX_PACKET_SIZE 32768
+#define SYNO_NFSD_UDP_MIN_PACKET_SIZE 4096
+#define SYNO_NFSD_UDP_DEF_PACKET_SIZE 8192
+#endif
+
+#ifdef CONFIG_SYNO_FIXED_DISK_NAME
+ 
+#define SYNO_ISCSI_DEVICE_INDEX    (26 + 25 * 26)     
+
+#ifdef CONFIG_SYNO_ARMADA
+ 
+#define SYNO_INTERNAL_MICROSD_NAME "4-4"
+#endif  
+#endif  
+
+#endif  

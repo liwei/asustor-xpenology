@@ -1,0 +1,19 @@
+menu "Cesa options"
+	depends on MV_INCLUDE_CESA
+
+config  MV_CESA
+	bool "Support for Marvell Cryptographic Engine and Security Acceleration(CESA)"
+	default y
+
+config  MV_CESA_TOOL_ARMADA
+	bool "Support for Marvell CESA Tool"
+	default y
+	depends on MV_CESA
+	select MV_CESA_TOOL
+	---help---
+
+config  MV_CESA_TOOL
+	depends on MV_CESA_TOOL_ARMADA
+	tristate
+
+endmenu

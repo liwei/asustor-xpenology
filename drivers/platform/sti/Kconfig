@@ -1,0 +1,28 @@
+#
+# STi Platform Specific Drivers
+#
+
+source "drivers/platform/sti/mali/Kconfig"
+
+config ST_SOCINFO
+	bool "Export SoC identifiers from DT and syscfg register"
+	select SOC_BUS
+	default y
+
+if SYNO_LSP_MONACO_SDK2_15_4
+
+config ST_CPUFREQ_INIT
+	bool "Dynamically create OPP list for cpufreq-cpu0 driver"
+	depends on SOC_STIH407
+	help
+	  OPP list for cpufreq-cpu0 driver can be provided through DT or can be
+	  created at runtime.Select this if you want create OPP list at runtime.
+
+config ST_AMBA_BRIDGE
+	tristate "STBus<->AMBA bridge configuration on STMicroelectronics STI SoCs"
+	depends on ARCH_STI
+	help
+	  This driver allows configuration of STBus/AMBA bridge on STMicroelectronics
+	  STI series SoCs.
+
+endif

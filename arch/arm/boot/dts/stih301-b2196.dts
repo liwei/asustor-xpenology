@@ -1,0 +1,57 @@
+/*
+ * Copyright (C) 2014 STMicroelectronics Limited.
+ * Author: Seraphin Bonnaffe <seraphin.bonnaffe@st.com>
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 2 as
+ * published by the Free Software Foundation.
+ */
+#include "stih301-b21xx.dts"
+/ {
+	model = "STiH301 B2196";
+	compatible = "st,stih301-b2196", "st,stih301", "st,stih410";
+
+	soc {
+#ifdef CONFIG_SYNO_LSP_MONACO_SDK2_15_4
+		pcie0: pcie@9b00000{
+			status = "okay";
+			reset-gpio = <&PIO34 2 0>;
+		};
+
+		/*
+		 * On B2196, PCIe and SATA are exclusive, and PCIe is enabled
+		 * by default. To enable SATA instead, move pcie0 node to
+		 * disabled and move sata and miphy nodes below to okay.
+		 * Note that SATA usage requires b2136 adaptor.
+		 */
+		miphy28lp_phy0: miphy28lp@0 {
+			/* select internal clock for miphy0 (sata) */
+			st,sata_gen = "gen3";
+			status = "okay";
+		};
+
+		sata0: sata@9b20000 {
+			status = "disabled";
+		};
+
+#endif /* CONFIG_SYNO_LSP_MONACO_SDK2_15_4 */
+		snd_uni_player0: snd-uni-player@0 {
+			status = "okay";
+		};
+		snd_uni_player2: snd-uni-player@2 {
+			status = "okay";
+		};
+
+		snd_uni_player3: snd-uni-player@3 {
+			status = "okay";
+		};
+
+		snd_conv_dac_sc: snd-conv-dac-sc {
+			status = "okay";
+		};
+
+		snd_conv_biphase: snd-conv-biphase {
+			status = "okay";
+		};
+	};
+};

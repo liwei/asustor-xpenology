@@ -1,0 +1,16 @@
+# Features from XPEnology
+
+config XPENO_SUPPRESS_GPIO_NOISE
+	bool "Suppress the noisy gpio error message"
+	default y
+	help
+	  Because of we lack of the real gpio device, gpiobase will initialize
+	  as 0, kernel will alert this in a noisy method.
+	  TODO: investigate the root cause and fix it instead of ignore it.
+
+config XPENO_SYNOBOOT_ID
+	bool "Synoboot device pid/vid customize"
+	default y
+	help
+	  Supply the vid/pid kernel parameters to customize synoboot
+	  device's vendor/product id.

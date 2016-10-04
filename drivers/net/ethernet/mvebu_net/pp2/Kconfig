@@ -1,0 +1,509 @@
+config MV_ETH_PP2
+	tristate "Marvell PP2 network interface driver"
+	depends on MACH_ARMADA_375 || ARCH_AVANTA_LP
+	default y
+	select MV_ETH_PP2_CLS2
+	select MV_ETH_PP2_CLS3
+	select MV_ETH_PP2_CLS4
+	select MV_ETH_PP2_CLS_MC
+	---help---
+	  This driver supports the network interface
+	  units in the following Marvell Soc families:
+	  1. ARMADA-375.
+	  2. AVANTA-LP.
+
+config MV_PP2_HWF
+	bool "Enable PPv2 Harware Forwarding"
+	depends on MV_ETH_PP2
+	default y
+	---help---
+	Enable Hardware:
+	Configuration is changable in Run-Time
+
+config MV_ETH_PP2_CLS2
+	bool
+	depends on MV_ETH_PP2
+	default y
+	---help---
+
+config MV_ETH_PP2_CLS3
+	bool
+	depends on MV_ETH_PP2
+	default y
+	---help---
+
+config MV_ETH_PP2_CLS4
+	bool
+	depends on MV_ETH_PP2
+	default y
+	---help---
+
+config MV_ETH_PP2_CLS_MC
+	bool
+	depends on MV_ETH_PP2
+	default y
+	---help---
+
+menu "PP2 BM configuration"
+	depends on MV_ETH_PP2
+
+choice
+	prompt "PP2 BM pool assignment mode"
+	default MV_PP2_BM_SWF_HWF_MODE
+	---help---
+	Determines how BM pools are divided among GBE ports
+
+config MV_PP2_BM_SWF_HWF_MODE
+	bool "SWF / HWF seperation"
+	---help---
+	BM pools are not shared between SWF and HWF.
+	Short pools are shared between all ports.
+	When BM pool is used only by HWF, then SW can allocate smaller buffers for same packet size
+	Configuration is changable in Run-Time
+
+config MV_PP2_BM_PER_PORT_MODE
+	bool "Per Port"
+	---help---
+	BM pools are shared beteen HWF and SWF.
+	BM pools are not shared between different ports.
+	When BM pool is used only by HWF, then SW can allocate smaller buffers for same packet size
+	Configuration is changable in Run-Time
+
+endchoice
+
+config MV_PP2_BM_LONG_BUF_NUM
+	int "number of buffers for PP2 BM long pool"
+	default 1024
+	---help---
+	The number of long buffers is relevant for all long BM pools
+
+config MV_PP2_BM_SHORT_BUF_NUM
+	int "number of buffers for PP2 BM short pool"
+	default 2048
+	---help---
+	The number of short buffers is relevant for all short BM pools
+
+endmenu
+
+menu "PP2 Rx/Tx Queue configuration"
+	depends on MV_ETH_PP2
+
+config MV_PP2_RXQ
+	int "Number of RX queues per port"
+	default 8
+	---help---
+	Multiple RX queue support.
+
+config  MV_PP2_TXQ
+	int "Number of TX queues per port"
+	default 8
+	---help---
+	Multiple TX queue support.
+
+config MV_PP2_RXQ_DESC
+	int "Number of Rx descriptors"
+	default 256
+	---help---
+	The number of Rx descriptors in each Rx queue.
+
+config MV_PP2_RXQ_DEF
+        int "Default RXQ to recieve packets"
+        default 0
+        ---help---
+
+config MV_PP2_TXQ_DESC
+	int "Number of Tx descriptors"
+	default 1024
+        ---help---
+	The number of Tx descriptors in each Tx queue.
+
+config MV_PP2_TXQ_DEF
+        int "Default TXQ to send local generated packets"
+        default 0
+        ---help---
+
+config MV_PP2_TXQ_CPU_CHUNK
+	int "Number of TX descriptors allocated per CPU"
+	default 64
+        ---help---
+	The number of TXQ descriptors each CPU will allocate each time when
+	no enough allocated descriptors to transmit the current packet.
+	The total number of TXQ descriptors (MV_PP2_TXQ_DESC) must be at least
+	3 * nr_cpu_ids * MV_PP2_TXQ_CPU_CHUNK
+
+config MV_PP2_AGGR_TXQ_SIZE
+	int "Number of aggregated Tx descriptors"
+	default 256
+        ---help---
+	The number of Tx descriptors in each aggregated Tx queue.
+
+config MV_PP2_TEMP_TXQ_SIZE
+	int "Number of temporary Txq descriptors (for switching between HWF and SWF)"
+	depends on MV_PP2_HWF
+	default 512
+        ---help---
+
+config MV_PP2_TEMP_TXQ_HWF_SIZE
+	int "Number of temporary Txq HWF descriptors (for switching between HWF and SWF)"
+	depends on MV_PP2_HWF
+	default 256
+        ---help---
+
+endmenu
+
+menu "PP2 IP/TCP/UDP Offloading"
+	depends on MV_ETH_PP2
+
+config  MV_PP2_TSO
+	bool "TSO Support for Marvell network interface"
+	default y
+	---help---
+	Marvell network driver compiled with TSO (TCP Segmentation Offload) support.
+	Configuration is changable in Run-Time
+
+endmenu
+
+menu "PP2 Control and Statistics"
+	depends on MV_ETH_PP2
+
+config  MV_PP2_DEBUG_CODE
+	bool "Add run-time debug code"
+	default n
+	---help---
+	Enable debug code blocks in key places of PP2 driver.
+	By default the debug code do nothing but can be activated in run-time
+	by sysfs command under directory: "/sys/devices/platform/neta"
+	"echo [p] [hex]   > debug  - b0:rx, b1:tx, b2:isr, b3:poll, b4:dump, b5:b_hdr"
+
+config  MV_PP2_STAT_ERR
+        bool "Collect error statistics"
+        default y
+	---help---
+	Marvell network interface driver collect minimal number of statistics.
+	Only for error conditions. Can be displayed using mv_eth_tool.
+
+config  MV_PP2_STAT_INF
+        bool "Collect event statistics"
+        default y
+        ---help---
+	Marvell network interface driver collect event statistics.
+	Provide more information about driver functionality and almost doesn't
+	effect performance. Can be displayed using mv_eth_tool.
+
+config  MV_PP2_STAT_DBG
+        bool "Collect debug statistics"
+        default n
+        ---help---
+	Marvell network interface driver collect a lot of statistics.
+	Used for Debug mode. Decrease performance. Can be displayed using mv_eth_tool.
+
+config  MV_PP2_STAT_DIST
+        bool "Collect debug distribution statistics"
+        default n
+        ---help---
+        Marvell network interface driver collect a lot of statistics.
+        Used for Debug mode. Decrease performance. Can be displayed using mv_eth_tool.
+
+endmenu
+
+menu "PP2 Advanced Features"
+	depends on MV_ETH_PP2
+
+config MV_PP2_SKB_RECYCLE
+	depends on NET_SKB_RECYCLE
+	bool "PP2 Skb recycle"
+	default y
+	---help---
+	Work-in-progress and experimental.
+
+	This option enables skb's to be returned via a callback at kfree to
+	the allocator to make a fastpath for very skb consuming network
+	applications.
+
+config MV_PP2_SKB_RECYCLE_DEF
+	depends on MV_PP2_SKB_RECYCLE
+	int "Default value for SKB recycle:  0 - disable, 1 - enable"
+	default 1
+	---help---
+	Default value for skb recycle capability.
+
+config MV_PP2_TXDONE_PROCESS_METHOD
+	bool "TX_DONE event process method"
+	default y
+	help
+	  It's used for choosing TX_DONE event process method
+	  MV_PP2_TXDONE_ISR means processing TX_DONE event in interrupt mode
+	  MV_PP2_TXDONE_IN_TIMER means using regular timer to process TX_DONE event in polling mode
+	  MV_PP2_TXDONE_IN_HRTIMER means using high-resolution timer to process TX_DONE event in polling mode
+
+choice
+	prompt "TX_DONE event process method"
+	depends on MV_PP2_TXDONE_PROCESS_METHOD
+	default MV_PP2_TXDONE_IN_HRTIMER
+
+	config  MV_PP2_TXDONE_ISR
+		bool "Use interrupt to process TX_DONE event"
+		---help---
+		When chosen TX_DONE event will be process in interrupt mode
+		When unchosen TX_DONE event will be processed in polling mode
+
+	config MV_PP2_TXDONE_IN_TIMER
+		bool "Use regular timer to process TX_DONE event"
+		---help---
+		When chosen TX_DONE event will be process by regular timer in polling mode.
+
+	config MV_PP2_TXDONE_IN_HRTIMER
+		depends on HIGH_RES_TIMERS
+		bool "Use high resolution timer to process TX_DONE event"
+		---help---
+		When chosen TX_DONE event will be process by high resolution timer in polling mode.
+		High resolution timer can support higher precision in ns level.
+		If high resolution timer is enabled, TX processing
+		can free SKB memory much faster.
+
+endchoice
+
+config MV_PP2_TX_DONE_HIGH_RES_TIMER_PERIOD
+	depends on MV_PP2_TXDONE_IN_HRTIMER
+        int "Periodical Tx Done high resolution timer period"
+        default 1000
+        range 10 10000
+        ---help---
+        Periodical high resolution timer period for Tx Done operation in [usec]
+        Its precision is much higher than regular timer whose higest precision is 10 msec
+        Tx done high resolution timer's higest precison is 10 usec
+        Must be larger than or equal to 10 and be smaller than or equal to 10000.
+
+config  MV_PP2_TX_DONE_TIMER_PERIOD
+	depends on MV_PP2_TXDONE_IN_TIMER
+        int "Periodical Tx Done timer period"
+        default 10
+        ---help---
+          Periodical timer period for Tx Done operation in [msec].
+
+config MV_PP2_TXDONE_COAL_PKTS
+	int "Threshold for TX_DONE event trigger"
+	default 16
+	---help---
+	Number of packets will be sent before TX_DONE event will be triggered
+	by interrupt or polling.
+
+config MV_PP2_RX_COAL_PKTS
+        int "Threshold [number of packets] for RX interrupt"
+        default 32
+        ---help---
+        Number of packets will be received before RX interrupt will be generated by HW.
+
+config MV_PP2_RX_COAL_USEC
+        int "Threshold [usec] for RX interrupt"
+        default 100
+        ---help---
+        Time delay in usec before RX interrupt will be generated by HW if number of
+	received packets larger than 0 but smaller than MV_ETH_RX_COAL_PKTS
+
+config MV_PP2_RX_DESC_PREFETCH
+	bool "Enable RX descriptor prefetch"
+	default n
+	---help---
+	Default value for RX descriptor prefetch.
+	When enabled PP2 driver uses "pld" instruction to prefetch one RX descriptor ahead.
+	This feature can be enabled/disabled in run-time by sysfs command under directory:
+	"/sys/devices/platform/neta/rx".
+	"echo [p] [m] > prefetch    - set RX prefetch mode for port [p]"
+	where [m]: 0-disable, 1-descriptor, 2-packet header, 3-both
+
+config MV_PP2_RX_PKT_PREFETCH
+	bool "Enable RX packet prefetch"
+	default n
+	---help---
+	Default value for first two cache lines of received packet prefetch.
+	When enabled PP2 driver uses "pld" instruction to prefetch first two cache lines
+	of received packet data.
+	This feature can be enabled/disabled in run-time by sysfs command under directory:
+	"/sys/devices/platform/neta/rx".
+	"echo [p] [m] > prefetch    - set RX prefetch mode for port [p]"
+	where [m]: 0-disable, 1-descriptor, 2-packet header, 3-both
+
+config MV_PP2_RX_SPECIAL
+	bool "Support special RX processing"
+	default n
+	---help---
+	Add source code for special RX processing of packets marked by parser.
+	To enable this feature two additional configurations must be done.
+	1. Parser must be configured to mark packets which need special processing.
+	2. Callback function for special RX processing must be registered (per port).
+	If unsure, say N.
+
+config MV_PP2_TX_SPECIAL
+	bool "Support special TX processing"
+	default n
+	---help---
+	Add source code for special TX processing of packets per egress port.
+	To enable this feature callback function for special TX processing
+	must be registered (per port).
+	If unsure, say N.
+
+config MV_PP2_L2FW
+	bool "L2 Forwarding support"
+	default n
+	---help---
+	Enable L2 Forwarding support for received packets.
+	Three modes are supported: Send packet without change, Swap MAC DA<->SA,
+	Copy the whole packet and swap MAC
+
+config MV_PP2_L2FW_XOR
+        bool "L2 Forwarding XOR support"
+        depends on MV_PP2_L2FW && MV_INCLUDE_XOR
+        default n
+        ---help---
+        Enable using XOR engine to copy ingress packets during L2FW processing.
+	If enabled XOR engine will be used to copy packet when packet size is
+	larger than XOR threshold (default value is 2000 bytes).
+	XOR threshold can be changes using sysfs command.
+
+config MV_PP2_L2SEC
+	bool "L2 Forwarding IPSec support"
+	depends on MV_PP2_L2FW
+	default n
+	---help---
+	Handle encrypted packets with CESA.
+
+config MV_PP2_L2FW_DEBUG
+	depends on (MV_PP2_L2FW && MV_PP2_DEBUG_CODE)
+	bool "Add run-time L2FW debug code"
+	default n
+	---help---
+	Enable L2FW run-time enable/disable enter debug code blocks
+
+config MV_PP2_RX_POLL_WEIGHT
+	int "poll weight for the RX poll() function"
+	default 64
+	range 1 255
+	---help---
+	poll weight for the RX poll() function; must be less or equal to 255
+
+config MV_PP2_EXTRA_BUF_SIZE
+	int "Extra buffer size in bytes"
+	default 120
+	range 120 16384
+	---help---
+	Size of buffers allocated for extra pool and used in special cases like TSO,
+	fragmentattion and others
+
+config MV_PP2_EXTRA_BUF_NUM
+        int "Number of extra buffers allocated for each port"
+        default MV_PP2_TXQ_DESC
+	---help---
+	Number of extra buffers allocated for each port
+endmenu
+
+menu "PP2 PON support"
+	depends on MV_ETH_PP2
+
+config MV_PP2_PON
+	bool "PP2 PON support"
+	depends on MV_INCLUDE_PON
+	---help---
+	Choose this option to support PON port in Marvell network driver.
+
+config MV_PP2_PON_TXP_DEF
+	int "Default T-CONT to send local generated packets"
+	depends on MV_PP2_PON
+	default 0
+	---help---
+	Define default T-CONT to send local generated packets
+
+config MV_PP2_PON_TXQ_DEF
+	int "Default TXQ to send local generated packets"
+	depends on MV_PP2_PON
+	default 0
+	---help---
+	Define default TXQ to send local generated packets
+
+endmenu
+
+menu "PP2 ERRATA / WA"
+	depends on MV_ETH_PP2
+
+config MV_PP2_SWF_HWF_CORRUPTION_WA
+        bool "Prevent data corruption in IOCC mode"
+        depends on MV_PP2_HWF
+        default y
+        ---help---
+	Enable this feature to avoid data corruption in IOCC mode
+	when HWF and SWF traffic use buffers from the same BM pools.
+        In addition workaround should be activated using sysfs command:
+	"echo en > pp2/gbe/c_inv   - on/off L1 and L2 cache invalidation"
+	After activation each buffer that refilled to BM pool in mixed mode
+	(used for HWF and SWF) will be invalidated by the driver.
+	Warning: this WA can't be activated when there are any kind
+	of PCIe activities.
+
+endmenu
+
+menu "PP2 CPH support"
+	depends on MV_ETH_PP2
+
+config  MV_CPH
+        tristate "Support for Marvell CPU Packet Handler Driver"
+        depends on MV_PP2_TX_SPECIAL
+        default n
+        ---help---
+        CPH is designed mainly for PON product (GPON/EPON),
+        which basically has two features:
+        1. Set special skb->protocol value based on user configure rules.
+        2. Forward SWF packets to special TCONT and GEM port (GPON), LLID (EPON).
+
+comment "CPH Driver Options"
+
+config  MV_CPH_IGMP_HANDLE
+        bool "Enable MV_CPH IGMP handling"
+	depends on MV_CPH
+        default n
+        ---help---
+        Enable CPH to handle IGMP as protocol packet,
+        and setspecial skb->protocol value based on
+        user configure rules. So it could be trapped
+        by RAW SOCKET.
+
+config  MV_CPH_MLD_HANDLE
+        bool "Enable MV_CPH MLD handling"
+	depends on MV_CPH
+        default n
+        ---help---
+        Enable CPH to handle MLD as protocol packet,
+        and set special skb->protocol value based
+        on user configure rules. So it could be
+        trapped by RAW SOCKET.
+
+config  MV_CPH_BC_HANDLE
+        bool "Enable MV_CPH broadcast handling"
+	depends on MV_CPH
+        default n
+        ---help---
+        Enable CPH to handle Broadcast as protocol
+        packet, and set special skb->protocol value
+        based on user configure rules.So it could be
+        trapped by RAW SOCKET
+
+config  MV_CPH_UDP_SAMPLE_HANDLE
+        bool "Enable MV_CPH sample UDP handling"
+	depends on MV_CPH
+        default n
+        ---help---
+        Enable CPH to handle sample UDP as protocol
+        packet, and set special skb->protocol value
+        based on user configure rules. So it could be
+        trapped by RAW SOCKET.
+
+config  MV_CPH_FLOW_MAP_HANDLE
+        bool "Enable MV_CPH flow mapping handling"
+	depends on MV_CPH
+        default n
+        ---help---
+        Enable CPH to handle flow mapping, and forward
+        upstream SWF packets to special TCONT and
+        GEM port (GPON), LLID (EPON) based on user
+        configure rules.
+
+endmenu

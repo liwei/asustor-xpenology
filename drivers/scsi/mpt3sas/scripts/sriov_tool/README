@@ -1,0 +1,102 @@
+			README for mpt3sas_configfs.pl
+			------------------------------
+
+1. Requirements:
+----------------
+
+This script requires XML::Simple & FILE::File PERL modules. Please install
+them using CPAN before running this script.
+
+2. Usage:
+---------
+Before loading the mpt3sas driver issue the following commands as super user
+
+#mkdir /config
+#mount -t configfs none /config
+
+PS: mpt3sas_configfs.pl has to run with super user privileges at all times.
+
+2.1 Discovery:
+-------------
+When running the script for the first time, issue the command
+
+#./mpt3sas_configfs.pl discovery
+
+This would discover all the LSI SAS GEN3 HBA Cards in the system and save the
+information in XML format in the file config.xml
+
+2.2 Mapping Disks:
+------------------
+For mapping the disks using this tool, issue the following command.
+
+#./mpt3sas_configfs.pl
+
+Now using the interactive interface first update the ioc_number. This number
+is the unique ID given to each of the LSI SAS GEN3 HBA. This number usually
+starts from 0 and goes on to the number of HBAs in the machine. You could
+obtain the unique ID from /sys/class/scsi_host/hostX/unique_id
+
+Next update the mapping mode, it could be either 1 or 2
+1 - Enclosure slot mapping
+2 - Persistent device mapping
+
+Note: Before we start mapping the disks, for all the enumerated GEN3 HBAs,
+we have to set the proper ioc_number and mapping_mode even if any GEN3 HBA
+doesn't have the SRIOV capability.
+
+We can start mapping disks now, select "create visibility for a disk" option
+and enter a name for the disk. Now visit the main menu, and when the update
+information option is selected, this disk name appears in the menu, select
+that again and a set of attributes (eg, WWID, etc) appears.
+
+In case of Enclosure Slot mapping,
+update the WWID with the Enclosure Logical ID (/sys/class/sas_device/end_device-H:P:D/enclosure_identifier)
+and slot with the slot number (/sys/class/sas_device/end_device-H:P:D/bay_identifier) of the disk.
+
+In case of Persistent Device mapping,
+update the WWID with the disk's SAS Address (/sys/class/sas_device/end_device-H:P:D/sas_address).
+
+Assuming that there are 2 VMs (VM1, VM2) and if the disk that we are mapping
+should be visible across both the VMs, update vfid_mask with the value 6
+(Please note that the value that is written into vfid_mask is in hexadecimal
+notation with/without 0x prefix). Now, if the disk has to be visible across
+VM1 alone, update vfid_mask with the value 2. if the disk has to be visible across
+VM2 alone, update vfid_mask with the value 4. Basically the value that we are
+writing is a bitmask.
+
+Once this has been written into, in the VM the mapped disk should be visible.
+Similarly, multiple disks could be mapped this way.
+
+The "Display Information" option could be used to view the data written into
+each of these attributes.
+
+PS:
+1. Once all the mapping is done close the mapping tool gracefully, only then
+the mapping details are saved into config.xml, otherwise it would be lost.
+2. While mapping a drive for first time, please make sure that drive exits
+in the topology.
+
+2.3 Repopulating with Previous configuration:
+---------------------------------------------
+Consider the scenario wherein, the system is rebooted or driver is unloaded
+and loaded, all the mapping previously done are lost. But, the details are
+saved in config.xml which could be used to revert back to the earlier saved
+configuration.
+
+To do this, do the following.
+
+#mount -t configfs none/config
+#./mpt3sas_configfs.pl start
+
+Now, the script would have mapped the disks to how it was earlier.
+
+PS: config.xml should be in the same folder as mpt3sas_configfs.pl
+
+3. Unloading:
+------------
+If a scenario requires the unloading of mpt3sas driver, ensure that the
+folders within /config/mpt3sas/hbaX are deleted using the "stop" command line
+option, only then the driver could be unloaded. Alternatively, you
+could delete the folders manually too.
+
+#./mpt3sas_configfs.pl stop

@@ -1,0 +1,90 @@
+#
+# Marvell SoC network devices
+#
+
+config NET_VENDOR_MVEBU
+	bool "Marvell SoC network devices"
+	default y
+	depends on ARCH_MVEBU
+	---help---
+	  If you have a network (Ethernet) card belonging to this class, say Y
+	  and read the Ethernet-HOWTO, available from
+	  <http://www.tldp.org/docs.html#howto>.
+
+if NET_VENDOR_MVEBU
+
+menu "Marvell Network SKB Features"
+
+config  NET_SKB_HEADROOM
+	int "SKB headroom size"
+	default 64
+	---help---
+	Customize SKB headroom size. Must be power of 2.
+
+config NET_SKB_RECYCLE
+	bool "Skb recycle"
+	default y
+	---help---
+	Work-in-progress and experimental.
+
+	This option enables skb's to be returned via a callback at kfree to
+	the allocator to make a fastpath for very skb consuming network
+	applications.
+
+endmenu
+
+menu "Marvell DSOHO SDT Features"
+config MV_INCLUDE_SWITCH
+	bool "Marvell Armada 38X network switch support"
+	default n
+	---help---
+	  This driver supports the network switch units in the
+	  Marvell ARMADA 38x SoC family.
+endmenu
+
+menu "Marvell Network PON Support"
+
+config MV_INCLUDE_PON
+	bool "PON include"
+	default n
+	---help---
+	Whether PON is included.
+
+endmenu
+
+menu "Marvell Network Debug Control"
+
+config MV_ETH_DEBUG_CODE
+	bool "Add run-time debug code"
+	default n
+	---help---
+	Enable run-time enable/disable enter debug code blocks
+
+endmenu
+config MV_ETH_INCLUDE_PHY
+	bool "Choose to compile Ethernet PHY support"
+	depends on MV_ETH_NETA || MV_ETH_PP2
+	default y
+	---help---
+	Use Marvell propriotary PHY driver for access PHY registers.
+	All kind of Marvell network drivers need it.
+	Driver provides APIs for reset PHY, restart autonegotiation and
+	change autonegotiation parameters of the PHY.
+	The driver located uner directory mvebu_net/phy
+
+config MV_ETH_INCLUDE_NETMUX
+	bool "Choose to compile Marvell NetMux support"
+	depends on MV_ETH_NETA || MV_ETH_PP2
+	default y
+	---help---
+	Use Marvell propriotary NETMUX driver for Virtual Networking interfaces support.
+	The driver located uner directory mvebu_net/netmux
+
+config MV_ETH_INCLUDE_NET_COMPLEX
+	bool "Choose to compile Marvell Net Complex support"
+	depends on MV_PP3
+	default y
+	---help---
+	Use Marvell propriotary netcomplex driver for A390.
+	The driver located uner directory mvebu_net/a390_nc.
+endif # NET_VENDOR_MVEBU

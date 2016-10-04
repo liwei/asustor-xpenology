@@ -1,0 +1,174 @@
+menu "Network"
+
+config SYNO_SWITCH_NET_DEVICE_NAME
+	bool "Switch net device name to collocate with hardware design"
+	default n
+	help
+		<DSM>No Bug Entry
+		Switch net device name to collocate with hardware design.
+
+config SYNO_MAX_SWITCHABLE_NET_DEVICE
+	int "Max number of switch net device name"
+	default 8
+	depends on SYNO_SWITCH_NET_DEVICE_NAME
+	help
+		<DSM>No Bug Entry
+		The max number of switching net device.
+
+config SYNO_NET_DEVICE_ENCODING_LENGTH
+	int "Encoding length of net device"
+	default 6
+	depends on SYNO_SWITCH_NET_DEVICE_NAME
+	help
+		<DSM>No Bug Entry
+		The encoding length of switching net deivce.
+
+config SYNO_SKIP_RXDROP_BY_CORE
+	bool "Skip RX packets drop is increasing"
+	default y
+	help
+		<Linux Kernel Porting - linux-2.6.38> #241
+		rx_dropped counts packets dropped by driver and kernel core
+		this define will let it only record the packets dropped by driver
+		please refer to caf586e5, 8990f468a
+
+config SYNO_REMOVE_TCP_DEBUG
+	bool "Remove tcp debug message"
+	default y
+	help
+		<DSM> #11508
+		remove some TCP debug message for ftp file copy
+
+config SYNO_IPV6_RFC_4862
+	bool "IPv6 Stateless Address Autoconfiguration"
+	default y
+	help
+		<DSM>No Bug Entry
+		perform DAD and disable IPv6 operation if DAD for MAC-based
+		link-local address has been failed (RFC4862 5.4.5).
+
+config SYNO_BONDING_INIT_STATUS
+	bool "Initial the bonding status"
+	default y
+	help
+		<DSM> #33143
+		The dev->operstate are not well initialized when bonding created.
+		In bonding, the dev->operstate is not initialized after dev_init. So we call default_operstate() to init this value.
+
+config SYNO_BONDING_FIX_ACTIVE
+	bool "Fix a bug in active backup bonding mode"
+	default y
+	help
+		<DSM> #74147
+		While keep changing the MTU of a bonding interface in active backup mode,
+		there is a chance that
+		(1) the speed of the current active slave remains unknown, or
+		(2) the current active slave is not actived
+		Either case causes the speed of the current active slave remains unknown.
+		If the speed of a bonding interface is unknown, its MTU can not
+		be changed again using synonet tool.
+		To solve the problem, this workaround changes the current active slave to
+		the next upped NIC slave with correct speed.
+
+config SYNO_IPV6_LINKLOCAL
+	bool "Assign an interface to IPV6 link local address automatically."
+	default y
+	help
+		<DSM> #14939, #47781
+		For convenience, if there is no interface assigned to IPV6 link local address,
+		a running interface is assigned automatically.
+		But this workaround violates the IPV6 standard and may cause problem in the future.
+
+config SYNO_COMPAT_WIRELESS
+	bool "Select kernel config for compat-wireless"
+	default y
+	select WIRELESS_EXT
+	select WEXT_PRIV
+	help
+		<Linux Kernel Porting - linux-3.10.x> #362
+		Some wireless driver in compat-wireless needs define depends on WEXT_PRIV and
+		WIRELESS_EXT, so we add this define to enable such config.
+
+config SYNO_SFP_UNSUPPORTED_NOTIFY
+	bool "SFP+ module unsupported notify"
+	default y
+	help
+	  <DSM> #54965
+	  Provides an interface at /proc/driver/syno_unsupported_sfp_notify
+	  to inform userspace that if an unsupported SFP+ module inserted.
+
+config SYNO_ALPINE_TUNING_NETWORK_PERFORMANCE
+	bool "Tuning Alpine network performance"
+	default y
+	depends on SYNO_ALPINE
+	help
+	  Adjust network settings to boost network performance.
+
+config SYNO_ALPINE_FIX_DMA_RECVFILE
+	bool "Fix Alpine file checksum error when using NET DMA"
+	default y
+	depends on SYNO_ALPINE
+	help
+	  When using recvfile, it expects it can receive full data (not partial).
+	  If it receives partial data, the remaining data will be random values, and
+	  file checksum will be incorrect.
+	  On Alpine, if CONFIG_NET_DMA is enabled, sometimes tcp_recvmsg will return
+	  partial data due to full DMA buffer, causing recvfile behave incorrectly.
+	  We add the delay & retry mechanism for this issue.
+
+config SYNO_ALPINE_ADJUST_RX_EQUAL
+	bool "Add an option to turn on/off 10G rx equalization according to sys entry"
+	default y
+	depends on SYNO_ALPINE
+	help
+	  RX equalization is used to tune best parameters for 10G transmission.
+	  Add an option to turn on/off RX equalization according to the entry in
+	  sys file system.
+
+config SYNO_ALPINE_CHANGE_RJ45_LED_BEHAVIOR
+	bool "Adjust Alpine backplane RJ45 LED behavior"
+	default y
+	depends on SYNO_ALPINE
+	help
+	  Adjust LED behavior to match HW spec.
+
+config SYNO_MONACO_NETWORK_FIXED
+	bool "Fix network when link speed on 10Mb/s"
+	default y
+	depends on SYNO_LSP_MONACO
+	help
+	  It is a workaround for link speed 10Mb/s.
+	  After applying this patch, the tx clk is 2.5MHz.
+
+config SYNO_PHY_INIT
+	bool "syno initialization of phy device"
+	default y
+	help
+	  Adjust registers to match HW spec.
+
+config SYNO_PHY_INIT_88E1514
+	bool "Enable phy driver of the phy 88E1514"
+	default y
+	depends on SYNO_PHY_INIT
+	help
+	  Enable phy driver of the phy 88E1514.
+
+config SYNO_INCREASE_SKB_SIZE
+       bool "Increase skb size to 2K"
+       default y
+       depends on SYNO_MONACO
+       help
+       <DSM> 86053
+       We find that STM mac receive packets which size is large than mtu 1500.
+       It will make skb_put trigger skb_over_panic. This config increase skb size to 2K.
+
+config SYNO_INCREASE_TSQ_SIZE
+	   bool "Increase TSQ size"
+	   default y
+	   depends on SYNO_ARMADA
+	   help
+	   <DSM> 83574
+	   We found that the size of tcp small queues would affect
+	   the performance of RX's throughput.
+
+endmenu #Network

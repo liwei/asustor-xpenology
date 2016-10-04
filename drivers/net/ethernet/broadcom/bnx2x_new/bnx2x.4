@@ -1,0 +1,535 @@
+.\" Copyright (c) 2007-2013 Broadcom Corporation
+.\" Copyright (c) 2014 QLogic Corporation
+.\" All rights reserved
+.\" This is free documentation; you can redistribute it and/or
+.\" modify it under the terms of the GNU General Public License as
+.\" published by the Free Software Foundation.
+.\"
+.\" bnx2x.4,v 1.0
+.\"
+.TH BNX2X 4 "11/29/07" "QLogic Corporation"
+.\"
+.\" NAME part
+.\"
+.SH NAME
+bnx2x \- QLogic BCM57710/BCM57711/BCM57711E/BCM57712/BCM57712_MF/
+BCM57800/BCM57800_MF/BCM57810/BCM57810_MF/BCM57811/BCM57811_MF/BCM57840/
+BCM57840_MF 10Gb PCIE Ethernet Network Controllers and QLogic 
+BCM57840 10Gb/20Gb PCIE Ethernet Network Controllers.
+.\"
+.\" SYNOPSIS part
+.\"
+.SH SYNOPSIS
+.B insmod bnx2x.ko
+.RB [int_mode=1]\c
+.br
+.B insmod bnx2x.ko
+.RB [int_mode=2]\c
+.br
+.B insmod bnx2x.ko
+.RB [disable_tpa=1]\c
+.br
+.B insmod bnx2x.ko
+.RB [dropless_fc=1]\c
+.br
+.B insmod bnx2x.ko
+.RB [autogreeen=2]\c
+.PP
+.B modprobe bnx2x
+.RB [int_mode=1]\c
+.br
+.B modprobe bnx2x
+.RB [int_mode=2]\c
+.br
+.B modprobe bnx2x
+.RB [disable_tpa=1]\c
+.br
+.B modprobe bnx2x
+.RB [dropless_fc=1\c]
+.br
+.B modprobe bnx2x
+.RB [autogreeen=2]\c
+.br
+.B modprobe bnx2x
+.RB [num_vfs=16]\c
+.\"
+.\" DESCRIPTION part
+.\"
+.SH DESCRIPTION
+.I :bnx2x
+is the network device driver for the QLogic
+.B BCM5771x/BCM578xx
+series PCIE 10/20-Gigabit Ethernet Network Interface Card (NIC). The driver has
+been tested on 2.6.x kernels starting from 2.6.9.
+.PP
+Refer to the README.TXT from the driver package on how to
+compile and install the driver.
+.PP
+Refer to various Linux documentations
+on how to configure network protocol and address.
+.\"
+.\" DRIVER DEPENDENCIES part
+.\"
+.SH DRIVER DEPENDENCIES
+The driver uses library functions in the crc32 and zlib_inflate libraries.
+On most kernels, these libraries are already built into the kernel. In
+some cases, it may be necessary to load these library modules before the
+driver or unresolved symbol errors will appear. Using modprobe will
+resolve the dependencies automatically.
+
+In rare cases where the crc32 and zlib_inflate libraries are not enabled
+in the kernel, it will be necessary to compile the kernel again with the
+libraries enabled.
+
+The driver uses also library functions in the crc32c library. On new kernels,
+this library is already built into the kernel. In some old kernels,
+it may be necessary to load this library module before the driver or
+unresolved symbol errors will appear. Using modprobe will resolve the
+dependencies automatically.
+
+On systems where GRO feature is available, driver uses functions from 8021q
+library. In some kernels this library is already built into the kernel, in
+others it may be necessary to load this library module before the driver or
+unresolved symbol errors will appear. Using modprobe will resolve the
+dependencies automatically.
+
+.\"
+.\" DRIVER SETTINGS part
+.\"
+.SH DRIVER SETTINGS
+The bnx2x driver settings can be queried and changed using \fBethtool\fP.
+The latest ethtool can be downloaded from
+\fBhttp://sourceforge.net/projects/gkernel\fP if it is not already installed.
+See the ethtool man page for more information. ethtool settings
+do not persist across reboot or module reload. The ethtool commands can be
+put in a startup script such as /etc/rc.local to preserve the settings
+across a reboot. On Red Hat distributions, "ethtool -s" parameters can be
+specified in the ifcfg-ethx scripts using the ETHTOOL_OPTS keyword. The
+specified ethtool parameters will be set during ifup. Example:
+/etc/sysconfig/network-scripts/ifcfg-eth0:
+
+ETHTOOL_OPTS="wol g speed 100 duplex half autoneg off"
+
+Note that when setting the number of RSS rings via 'ethtool -L' option, only
+the 'combined' field can be set, as we don't have independent rx or tx rings.
+
+Note that it is possible to set the 57712/578xx Maximum Bandwidth value of a
+partition in NPAR mode without a system reboot via 'ethtool -s ethX speed
+NNNNN' option. 'ethX' is the partition and 'NNNNN' is the partition's new
+maximum Bandwidth value.
+
+Note that it is possible to set 2-tuple / 4-tuple hash for UDP via 'ethtool -N'
+option. For TCP only 4-tuple hash is supported.
+
+.\"
+.\" PARAMETER part
+.\"
+.SH PARAMETERS
+Several optional parameters can be supplied as a command line argument
+to the insmod or modprobe command. These parameters can also be set in
+modprobe.conf. See the man page for more information.
+.PP
+The optional parameter \fBint_mode\fP is used to force using an interrupt mode
+other than MSI-X. By default, the driver will try to enable MSI-X if it is
+supported by the kernel. In case MSI-X is not attainable, the driver will try
+to enable MSI if it is supported by the kernel. In case MSI is not attainable,
+the driver will use legacy INTx mode. In some old kernels, it's impossible to
+use MSI if device has used MSI-X before and impossible to use MSI-X if device
+has used MSI before, in these cases system reboot in between is required.
+.PP
+Set the \fBint_mode\fP parameter to 1 as shown below to force using the legacy
+INTx mode on all NICs in the system.
+.PP
+insmod bnx2x.ko int_mode=1
+.PP
+or
+.PP
+modprobe bnx2x int_mode=1
+.PP
+Set the \fBint_mode\fP parameter to 2 as shown below to force using MSI mode
+on all NICs in the system.
+.PP
+insmod bnx2x.ko int_mode=2
+.PP
+or
+.PP
+modprobe bnx2x int_mode=2
+.PP
+The optional parameter \fBdisable_tpa\fP can be used to disable the
+Transparent Packet Aggregation (TPA) feature. By default, the driver will
+aggregate TCP packets, but if a user would like to disable this advanced
+feature - it can be done.
+.PP
+Set the \fBdisable_tpa\fP parameter to 1 as shown below to disable the TPA
+feature on all NICs in the system.
+.PP
+insmod bnx2x.ko disable_tpa=1
+.PP
+or
+.PP
+modprobe bnx2x disable_tpa=1
+.PP
+Use ethtool (if available) to disable TPA (LRO) for a specific NIC.
+.PP
+The optional parameter \fBdropless_fc\fP can be used to enable a complementary
+flow control mechanism on 57711, 57711E, 57712 or 578xx. The default flow
+control mechanism is to send pause frames when the on chip buffer (BRB) is
+reaching a certain level of occupancy. This is a performance targeted flow
+control mechanism. On 57711, 57711E, 57712 or 578xx one can enable another flow
+control mechanism to send pause frames in case where one of the host buffers
+(when in RSS mode) are exhausted. This is a "zero packet drop" targeted flow
+control mechanism.
+.PP
+Set the \fBdropless_fc\fP parameter to 1 as shown below to enable the dropless
+flow control mechanism feature on all 57711 or 57711E NICs in the
+system. The parameters will also work on 57712 and 578xx devices with DCBX
+feature disabled or in case of DCB protocol has negotiated pause flow control
+with a link partner.
+.PP
+insmod bnx2x.ko dropless_fc=1
+.PP
+or
+.PP
+modprobe bnx2x dropless_fc=1
+.PP
+The optional parameter \fBautogreeen\fP can be used to force specific AutoGrEEEN
+behavior. By default, the driver will use the nvram settings per port, but if
+the module parameter is set, it can override the nvram settings to force
+AutoGrEEEN to either active (1) or inactive (2). The default value of 0 to use
+the nvram settings.
+.PP
+The optional parameter \fBnative_eee\fP can be used to force specfic EEE behaviour.
+By default, the driver will use the nvram settings per port, but if the module
+parameter is set, it can force EEE to be enabled, and the value will be used as
+the idle time required prior to entering Tx LPI. The default value of 0 indicates usage
+of the nvram settings.
+.PP
+The optional parameter \fBnum_queues\fP can be used to force number of RSS queues
+and override the default value which is equals to number of CPUs (limited by
+HW capabilities).
+.PP
+The optional parameter \fBpri_map\fP is used to map the skb-priority to a Class Of
+Service (CoS) in the HW. This 32 bit parameter is evaluated by the  driver as 8
+values of 4 bits each. Each nibble sets the desired HW queue number for that
+priority.
+.PP
+This parameter is only available in kernels which support mapping skb
+priorities to traffic classes and traffic classes to transmission queues. This
+means kernel 2.6.39 or newer.
+.pp
+On the 5771x family three classes of service are available, but are always
+served in round robin manner allowing small bulk high priority traffic to be
+serviced before low priority heavy volume traffic by assigning it a separate COS
+and thus a separate hardware queue. More advanced COS features such as Strict
+Priority, Enhanced Transmission Selection and Priority Flow Control are
+unavailable as the hardware doesn't support them.
+.PP
+On the 57712 family two classes of service are available, with complete Data
+Center Bridging support (including SP, ETS and PFC).
+.PP
+On the 578xx family three classes of service are available, with complete Data
+Center Bridging support (including SP, ETS and PFC).
+.PP
+Configuring  priorities to unavailable COSs will log an error and default to
+COS 0.
+.PP
+For example, set the pri_map parameter to 0x22221100 to map priority 0 and 1 to
+CoS 0, map priority 2 and 3 to CoS 1, and map priority 4 to 7 to CoS 2. Another
+example, set the pri_map parameter to 0x11110000 to map priority 0 to 3 to CoS
+0, and map priority 4 to 7 to CoS 1.
+.PP
+The optional parameter \fBtx_switching\fP makes the L2 transmitter test for each
+transmitted packet whether packet is intended for the transmitting NIC. This is
+only relevant in multifunction mode, especially in virtualized environments. For
+example, if the destination mac address of the transmitted packet belongs to
+another function in the same port, and other conditions such as vlan are met,
+the packet is loopbacked instead of being transmitted on the wire. In certain
+cases the packet is replicated both to the loopback and the wire. An example for
+this is the receiver being in promiscuous mode. Important: enabling tx-switching
+has performance penalties, even if no tx-switching is taking place (testing
+whether the packets need to be loopbacked is the cause for the penalty). By
+default tx-switching is disabled, but once an interface has enabled its
+virtual functions (sriov) the feature is enabled for that function.
+.PP
+modprobe bnx2x tx_switching=1
+.PP
+There are some more optional parameters that can be supplied as a command line
+argument to the insmod or modprobe command. These optional parameters are
+mainly to be used for debug and may be used only by an expert user.
+.PP
+The debug optional parameter \fBpoll\fP can be used for timer based polling.
+Set the \fBpoll\fP parameter to the timer polling interval on all
+NICs in the system.
+.PP
+The debug optional parameter \fBmrrs\fP can be used to override the MRRS
+(Maximum Read Request Size) value of the HW. Set the \fBmrrs\fP parameter to
+the desired value (0..3) for on all NICs in the system.
+.PP
+The debug optional parameter \fBdebug\fP can be used to set the default
+msglevel on all NICs in the system. Use \fBethtool -s\fP to set
+the msglevel for a specific NIC.
+.PP
+.\"
+.\" DEFAULT SETTINGS part
+.\"
+.SH DEFAULT SETTINGS
+.TP
+Speed :
+According to nvram configuration, but in general
+Autonegotiation with all speeds advertised.
+.TP
+Flow control :
+According to nvram configuration, but in general
+Autonegotiation with rx and tx advertised. Note that
+for adapters/interfaces which do not support flow
+control autonegotiation, ie SFP+, driver default will
+be off if the nvram is set to autonegotiation.
+.TP
+MTU :
+1500 (range 46 - 9000)
+.TP
+Rx Ring size :
+4078/(number of RSS queues) (range 128 - 4078)
+.TP
+Tx Ring size :
+4078 (range (MAX_SKB_FRAGS+4) - 4078)
+
+MAX_SKB_FRAGS varies on different kernels and
+different architectures. On a 2.6 kernel for
+x86, MAX_SKB_FRAGS is 18.
+.TP
+Coalesce rx usecs :
+25 (range 0 - 3000)
+.TP
+Coalesce tx usecs :
+50 (range 0 - 12288)
+.TP
+MSI-X :
+Enabled (if supported by 2.6 kernel)
+.TP
+TSO :
+Enabled
+.TP
+WoL :
+According to nvram configuration for OOB WoL.
+.\"
+.\" DUAL MEDIA SUPPORT part
+.\"
+.SH DUAL MEDIA SUPPORT
+A dual media capable system connects two PHYs to a single MAC. These PHYs
+generally use different media types (for example SFP+ fiber and 10GBase-T
+twisted pair copper) and the dual media configuration requires that the user
+select a preference among the two PHYs. Supported preferences include manual
+selection and PHY priority selection. With manual selection, the user specifies
+that only one PHY should be configured and use to connect to the network. (For
+example, use the fiber PHY only, always ignore the copper PHY.) With PHY
+priority selection, the user specifies that either PHY may be used to connect
+to the network, but when both PHYs indicate link, the PHY with the higher
+priority will be used to connect to the network. (For example, with fiber PHY
+priority, if either the copper PHY or the fiber PHY has link, that PHY will be
+used to connect to the network. However, if both the fiber and copper PHYs have
+link, the fiber PHY will be used to connect to the network and the copper PHY
+will be ignored.) When PHY priority selection is used, the PHY which has been
+selected for network connectivity is referred to as the active PHY. When PHY
+manual selection is used, there are no special considerations when running
+ethtool since only one media type is used by the MAC and ethtool is able to
+control that media type as expected. However, since ethtool is currently not
+designed to manage the multiple physical interfaces enabled by Dual Media
+support,  the following limitations will apply when ethtool is used on a system
+with PHY priority selection enabled:
+
+1. Ethtool can be used to display the current physical media information for
+the active PHY.
+
+2. Ethtool cannot be used to determine whether PHY manual selection or PHY
+priority selection is in use. This configuration information is available
+through system specific utilities provided by the vendor.
+
+3. Ethtool can be used to control the current  physical media configuration,
+but this will force the configuration back to PHY manual selection.
+
+4. When ethtool is used to configure the active PHY, ethtool must be called
+twice, first to change AWAY from the active PHY, then to change BACK to the
+active PHY. (For example, if the active PHY is copper, ethtool must be first
+called to change the active PHY to fiber, forcing PHY manual selection
+to be enabled, then ethtool must be called again to change the active PHY
+to copper.)
+
+5. Using ethtool to change from PHY priority selection to PHY manual selection
+only applies to the current session. When the driver is unloaded/reloaded or
+the system is rebooted, PHY selection will return to the default value.
+PHY selection defaults must be set outside of Linux with system specific
+utilities provided by the vendor.
+
+.\"
+.\" SR-IOV SUPPORT part
+.\"
+.SH SR-IOV SUPPORT
+SR-IOV stands for Single Root Input Output Virtualization. In SRIOV a single
+physical device can identify over the PCI, in addition to its own PCI id, as
+multiple virtual devices. In networking, these additional devices are
+lightweight nics. Physical devices are noted as Physical Functions, or PFs in
+short. Likewise Virtual devices are noted as VFs.
+.PP
+.B bnx2x
+.br
+In the bnx2x solution, the VFs have only fastpath components (tx/rx rings,
+interrupts) while the PF which spawned them manages the slowpath for itself as
+well as that of all of its virtual offspring.
+The same bnx2x module used to drive PFs is used to drive VFs as well (single
+binary). This means that no additional module needs to be loaded for VFs.
+This also means that the VF devices will be probed as soon as they appear
+in the Hypervisor.
+.PP
+.B PCI Passthrough
+.br
+SR-IOV is particularly useful in conjunction with PCI passthrough, where
+devices, be they physical or virtual, are passed through’to Virtual Machines.
+in PCI passthrough, in contrast with classic virtualization, no emulation of
+the device is being performed by the HyperVisor.
+Instead, the device is passed through as is into the VM, and the VM is
+responsible to operate the device. Interrupts and BARs are handed over directly
+to the VM, and the hypervisor relinquishes control over the device. A passed
+through VF can supply its hosting VM with high quality networking in terms of
+traffic and CPU (since no HyperVisor intervention takes place). SR-IOV is
+particularly useful alongside PCI passthrough since a single PF can spawn
+multiple VFs, and then pass them through into multiple VMs, thus supplying
+multiple VMs with high performance networking while saving on CPU usage.
+The alternatives, either the HyperVisor emulating multiple nics over a single
+PF (classic Virtualization) or passing through the PF itself (Physical Device
+Assignment), suffer greatly from poor performance and high CPU usage (the
+former) or too few nics to go around and severe security issues (the latter).
+.PP
+.B Static Activation
+.br
+SR-IOV can be activated with the num_vfs module parameter like this:
+.PP
+modprobe bnx2x num_vfs=<num of VFs, 1..64>
+.PP
+The actual number of VFs will be derived from this parameter, as well as the
+vf max value configured by CCM.
+Only when the PF device is loaded, will the VF devices appear in lspci. At this
+point the devices can be passed through to VMs (or they can be used in the
+HyperVisor).
+.PP
+.B Dynamic Activation
+.br
+SR-IOV can also be activated dynamically via sysfs, by writing the number of
+desired VFs to the sriov_numvfs node. e.g.
+.PP
+echo 64 > /sys/bus/pci/devices/0000:01:00.0/sriov_numvfs
+.PP
+This feature is only available on sufficiently advanced kernels (3.8.0).
+.PP
+.B VF mac addresses
+.br
+VF devices have all zeroes mac addresses be default. The user must configure
+a mac address for the VFs before they can be loaded. This can be down directly
+against the VF device (whether the device is in the HyperVisor or in a VM).
+Alternately, the user can configure the mac address to a VF from the hypervisor
+against the PF device using the iproute2 suite commands, e.g.
+ip link set <pf device> vf <vf index> mac <mac address>
+MAC addresses configured to a VF by the hypervisor trump any configuration
+done against the Vf device.
+.PP
+.B VF multiqueue
+.br
+VFs use multiple queues for receive and transmit (RSS/TSS). There is a pool of
+64 queues per engine which is statically divided between the VFs. i.e. 64 VFs
+will have a single queue each, while 4 VFs will have 16 queues each. A single
+VF is limited to 16 queues.
+.PP
+.B Limitations
+.br
+VFs can only operate as long as their PF stays loaded. unloading the PF or
+removing the driver altogether when a PF has VFs, especially when passed
+through, should be avoided. VFs whose PF was unloaded are "stranded", meaning
+they are no longer operational and cannot pass traffic. Loading the PF again
+will not change this state. Only removing the module in all VMs and in the
+hypervisor and probing again can fix it.
+
+.\"
+.\" TUNNELING OFFLOAD SUPPORT part
+.\"
+.SH TUNNELING OFFLOAD SUPPORT
+Tunneling refers to transmission of packets (usually L2 packets) that are 
+encapsulated within an outer-header. The outer-header can be above 
+L2/L2+L3/L2+L3+L4 etc. The idea is that there is a separation between the
+physical network, that sees the outer-header, and the logical network that is 
+configured based on the inner headers.
+
+.PP
+Along with supporting tunneled traffic device may support offloading some work
+of host like Tx checksum, Rx checksum, TSO etc for encapsulated packet.
+
+.PP
+.B bnx2x
+.br
+bnx2x supports VXLAN, L2GRE and IPGRE tunnels and it is enabled by default.
+It supports VXLAN, L2GRE and IPGRE traffic simultaneously. 
+
+.PP
+.B Offload support
+.br
+bnx2x supports Tx checksum offload and TSO for encapsulated packets for
+VXLAN, L2GRE and IPGRE tunnels. It does not support Rx offload for VXLAN,
+L2GRE and IPGRE tunnels. VLAN HW acceleration is not supported for inner
+packets.
+.PP
+Driver programs first vxlan destination port provided to it by kernel.
+If driver programmed vxlan destination port gets deleted driver
+programs next available vxlan destination port provided by kernel.
+
+.PP
+.B Limitations
+.br
+- VXLAN requires programming destination port for communication between two
+  tunnel endpoints. Programming of only one such destination port is supported.
+.br
+- In NPAR scenario each PF sharing same port should have same VXLAN destination
+  port.
+
+.PP
+.B Tools
+.br
+Creating VXLAN,GRE tunnels and programming of VXLAN destination port is
+supported through ip tools and ovs-vsctl (open vSwitch tools).
+.PP
+- ip tool command for creating vxlan device
+.PP
+  ip link add <vxlan_dev_name> type vxlan id <VNI> dev <ethernet_dev>
+  group <multicast> dstport <vxlan dst port> ttl 255
+.PP
+  Here group is a multicast group to which vxlan device subscribes.
+.PP
+- open vSwitch command for creating vxlan device
+.PP
+  ovs-vsctl add-port <OVS bridge> <vxlan dev name> -- set interface <vxlan dev name>
+  type=vxlan options:remote_ip=<remote interface ip addr>  options:key=<VNI> 
+  options:dst_port= <vxlan dst port>
+.PP
+  Note: Open vSwitch may support only the framing format for packets on the
+  wire. There may be no support for the multicast aspects of VXLAN.
+  To get around the lack of multicast support, it is possible to
+  pre-provision MAC to IP address mappings either manually or from a
+  controller. 
+.PP
+  Same commands can be used to create GRE tunnel by replacing vxlan by GRE
+  and some options may not be valid for GRE. 	
+.PP
+.\"
+.\" AUTHOR part
+.\"
+.SH AUTHOR
+Eliezer Tamir
+.\"
+.\" SEE ALSO part
+.\"
+.SH SEE ALSO
+.BR ifconfig (8),
+.BR insmod (8),
+.BR modprobe.conf (5),
+.BR ethtool (8),
+.BR ovs-vsctl (8),
+.BR ip (8).
+

@@ -1,0 +1,199 @@
+/*
+ * Device Tree file for Marvell Armada 385 evaluation board
+ * (DB-88F6820)
+ *
+ *  Copyright (C) 2013 Marvell
+ *
+ * Thomas Petazzoni <thomas.petazzoni@free-electrons.com>
+ *
+ * This file is licensed under the terms of the GNU General Public
+ * License version 2.  This program is licensed "as is" without any
+ * warranty of any kind, whether express or implied.
+ */
+
+/dts-v1/;
+#include "armada-385-388.dtsi"
+
+/ {
+	model = "Marvell Armada 385 Development Board";
+	compatible = "marvell,a385-db", "marvell,armada385", "marvell,armada38x";
+
+	chosen {
+		bootargs = "console=ttyS0,115200 earlyprintk";
+	};
+
+	memory {
+		device_type = "memory";
+		reg = <0x00000000 0x10000000>; /* 256 MB */
+	};
+
+	soc {
+
+		internal-regs {
+			ethernet@70000 {
+				status = "okay";
+				phy = <&phy0>;
+				phy-mode = "rgmii";
+			};
+
+			ethernet@30000 {
+				status = "okay";
+				phy = <&phy1>;
+				phy-mode = "rgmii";
+			};
+
+			i2c0: i2c@11000 {
+				status = "okay";
+				clock-frequency = <100000>;
+				audio_codec: audio-codec@4a {
+					compatible = "cirrus,cs42l51";
+					reg = <0x4a>;
+				};
+			};
+
+			i2c1: i2c@11100 {
+				status = "okay";
+				clock-frequency = <100000>;
+			};
+
+			mdio {
+				phy0: ethernet-phy@0 {
+					reg = <0>;
+				};
+
+				phy1: ethernet-phy@1 {
+					reg = <1>;
+				};
+			};
+
+			sata@a8000 {
+				status = "okay";
+			};
+
+			tdm@b0000 {
+				pinctrl-0 = <&tdm_pins>;
+				pinctrl-names = "default";
+				pclk-freq-mhz = <8>;
+			};
+
+			sdhci@d8000 {
+				broken-cd;
+				wp-inverted;
+				bus-width = <8>;
+				status = "okay";
+				no-1-8-v;
+			};
+
+			serial@12000 {
+				status = "okay";
+			};
+
+			spi0: spi@10600 {
+				status = "okay";
+
+				spi-flash@0 {
+					#address-cells = <1>;
+					#size-cells = <0>;
+					compatible = "w25q32";
+					reg = <0>; /* Chip select 0 */
+					spi-max-frequency = <108000000>;
+					spi-cpha;
+				};
+			};
+
+			spi1: spi@10680 {
+				pinctrl-0 = <&spi1_pins>;
+				pinctrl-names = "default";
+
+				slic@0 {
+					#address-cells = <1>;
+					#size-cells = <0>;
+					compatible = "mv_slic";
+					reg = <0>; /* Chip select 0 */
+					spi-max-frequency = <3000000>;
+					spi-1byte-cs;
+					spi-cpol;
+					spi-cpha;
+				};
+			};
+
+			/*
+			 * 1GB Flash via NFC NAND controller
+			 * should be disabled when the board boots
+			 * from SPI flash, since NFC shares the same
+			 * pins with SPI0 and requires SLM-1358 jumper.
+			 * However the u-boot DTB parser will
+			 * handle this situation and disable/remove
+			 * unnessesary devices according to board
+			 * boot-up configuration.
+			 */
+			nfc: nand@d0000 {
+				status = "okay";
+				#address-cells = <1>;
+				#size-cells = <1>;
+
+				nfc,nfc-mode  = "normal";	/* normal or ganged */
+				nfc,nfc-dma   = <0>;		/* 0 for no, 1 for dma */
+				nfc,nfc-width = <8>;
+				nfc,ecc-type  = <1>;		/* 4 bit */
+				nfc,num-cs    = <1>;
+
+				mtd0@00000000 {
+					label = "U-Boot";
+					reg = <0x00000000 0x00600000>;
+					read-only;
+				};
+
+				mtd1@00080000 {
+					label = "uImage";
+					reg = <0x00600000 0x00400000>;
+					read-only;
+				};
+
+				mtd2@00140000 {
+					label = "Root";
+					reg = <0x00a00000 0x3f600000>;
+				};
+			};
+
+			audio-controller@e8000 {
+				pinctrl-0 = <&i2s_pins>;
+				pinctrl-names = "default";
+			};
+
+			crypto@9D000 {
+				status = "okay";
+			};
+		};
+
+		pcie-controller {
+			status = "okay";
+			/*
+			 * The two PCIe units are accessible through
+			 * standard PCIe slots on the board.
+			 */
+			pcie@1,0 {
+				/* Port 0, Lane 0 */
+				status = "okay";
+			};
+			pcie@2,0 {
+				/* Port 1, Lane 0 */
+				status = "okay";
+			};
+		};
+	};
+
+	sound {
+		compatible = "marvell,a385db-audio";
+		marvell,audio-controller = <&audio_controller>;
+		marvell,audio-codec = <&audio_codec &spdif_out &spdif_in>;
+	};
+
+	spdif_out: spdif-out {
+		compatible = "linux,spdif-dit";
+	};
+
+	spdif_in: spdif-in {
+		compatible = "linux,spdif-dir";
+	};
+};

@@ -1,0 +1,26 @@
+menuconfig SYNO_FEATURES
+	bool "Synology Enhancement Features"
+	help
+		TBD
+
+if SYNO_FEATURES
+
+source "synoconfigs/Kconfig.platform"
+source "synoconfigs/Kconfig.basic"
+source "synoconfigs/Kconfig.network"
+source "synoconfigs/Kconfig.devices"
+source "synoconfigs/Kconfig.fs"
+source "synoconfigs/Kconfig.misc"
+
+endif #SYNO_FEATURES
+
+menuconfig XPENOLOGY_FEATURES
+	bool "XPEnology Enhancement Features"
+	help
+		Features from XPEnology.
+
+if XPENOLOGY_FEATURES
+
+source "synoconfigs/Kconfig.xpenology"
+
+endif # XPENOLOGY_FEATURES

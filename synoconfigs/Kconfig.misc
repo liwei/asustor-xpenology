@@ -1,0 +1,130 @@
+menu "MISC Features"
+
+config SYNO_LIMIT_CPU_CORES
+	bool "Set the physical and logical cores from 2nd core off"
+	default y if SYNO_X64
+	depends on SYNO_HW_VERSION
+	help
+	  <DSM> #30927, #30928
+	  In Kernel, we should prevent the users from trying to set the cores online.
+	  In DS712pv20, cpu1 and cpu3 are not allowed to be online.
+
+config SYNO_HDDMON
+	tristate "Syno HDD monitor"
+	depends on SYNO_ATA_PWR_CTRL && SYNO_HDD_HOTPLUG
+	help
+	  <DSM> No Bug Entry
+	  Power on the disk after the disk is plugged on the models which support disk
+	  power control.
+
+config SYNO_INCREASE_READAHEAD
+	bool "Increase default max readahead"
+	default y
+	help
+	  <DSM> #16466
+	  Increase default max readahead size of block device to improve performance
+
+config SYNO_MAX_READAHEAD_SIZE
+	int "Set default max readahead size"
+	depends on SYNO_INCREASE_READAHEAD
+	default "192" if X86_64
+	default "512" if !X86_64
+	help
+	  <DSM> #16466
+	  Set default max readahead size of block device
+
+config SYNO_BLOCK_LIMIT_BAD_SECTOR_MSG
+	bool "Reduce the rate of bad sector messages"
+	default y
+	help
+	  <DSM> #5873
+	  Say yes if you want to limit the rate of bad sector handling message output
+
+config SYNO_IO_ERROR_LIMIT_MSG
+	bool "Reduce the rate of IO error print messages"
+	default y
+	help
+	  <DSM> #41812
+	  Say yes if you want to limit the rate of I/O error message output
+
+config SYNO_EMULATE_U64_DIVISOR
+	bool "Emulate caculating of u64 remainder"
+	default y
+	help
+	  <DSM> #58360
+	  Say yes if you need complile-time check of 64-bit-mod operation by strict definition of 32-bit platform
+
+config SYNO_APPARMOR_PATCH
+	bool "Declare APPARMOR usage for userspace"
+	default y
+	depends on SECURITY_APPARMOR
+	help
+	  <DSM> #58858
+	  Exports SYNO_APPARMOR_PATCH define to userspace
+
+config SYNO_POWEROFF_INFO_PRINT
+	bool "Show pma1 and pma2 in poweroff procedure"
+	default n
+	help
+	  <Linux Kernel Porting 3.10.x> #515
+	  Show pma1 and pma2 in poweroff procedure
+
+config SYNO_LOWER_MD_RESYNC_NICE
+	bool "Lower nice value to MD resync threads"
+	depends on SYNO_ALPINE
+	default n
+	help
+	  Only alpine platform needs lower nice value now.
+
+config SYNO_FIX_DM_DISK_ALIGNMENT
+	bool "Fix issue of device mapper disk alignment problem"
+	default y
+	help
+	  <DSM> #62671
+	  Tune the chunk size from dmsetup input to fit the disk alignment
+
+config SYNO_OOM_DUMP_MODULE
+	bool "Dump modules and occupied memory sizes while OOM"
+	default y
+	help
+	  <DSM> #77534
+	  Dump modules and occupied memory sizes while OOM to help debug
+
+endmenu #MISC Features
+
+menu "Encryption"
+
+config SYNO_FIX_OCF_CRYPTODEV_RACE
+	bool "Fix OCF's race in cryptodev interface"
+	depends on OCF_OCF
+	default y
+	help
+	  Fix OCF race in cryptodev interface
+
+config SYNO_FIX_OCF_CRYPTOSOFT_RACE
+	bool "Fix OCF's race in cryptosoft interface"
+	depends on OCF_CRYPTOSOFT
+	default y
+	help
+	  Fix OCF race in cryptosoft interface
+
+config SYNO_FIX_MV_CESA_RACE
+	bool "Fix Marvell's crypto driver race"
+	depends on MV_CESA
+	default y
+	help
+	  Fix Marvell crypto driver race condition
+
+endmenu #Encryption
+
+menu "Udev"
+
+config SYNO_DEPRECATED_UEVENT_ENV
+	bool "Export deprecate uevent environment to userspace"
+	default y
+	help
+	  <DSM> #58635
+	  Uevent environment PHYSDEVPATH, PHYSDEVBUS and PHYSDEVDRIVER is missing
+	  after disable sysfs_deprecate config.
+
+endmenu #Udev

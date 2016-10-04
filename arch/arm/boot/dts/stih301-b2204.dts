@@ -1,0 +1,107 @@
+/*
+ * Copyright (C) 2014 STMicroelectronics Limited.
+ * Author: Laurent Meunier <laurent.meunier@st.com>
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 2 as
+ * published by the Free Software Foundation.
+ */
+#include "stih301-b21xx.dts"
+/ {
+	model = "STiH301 B2204";
+	compatible = "st,stih301-b2204", "st,stih301", "st,stih410";
+
+	memory {
+		device_type = "memory";
+		/*
+		 * 2 x 16 bits x 512MB: reg = <0x40000000 0x40000000>;
+		 * 1 x 16 bits x 512MB: reg = <0x40000000 0x20000000>;
+		 */
+		reg = <0x40000000 0x40000000>;
+	};
+
+	soc {
+		mmc0: sdhci@09060000 {
+			non-removable;
+			status = "okay";
+		};
+
+		leds {
+			compatible = "gpio-leds";
+			green {
+				#gpio-cells = <2>;
+				gpios = <&PIO4 6 0>;
+				default-state = "off";
+			};
+		};
+
+		ethernet0: dwmac@9630000 {
+			st,tx-retime-src = "clkgen";
+			status = "okay";
+			phy-mode = "mii";
+			pinctrl-0 = <&pinctrl_mii1>;
+
+			snps,phy-bus-name = "stmmac";
+			snps,phy-bus-id = <0>;
+			snps,phy-addr = <0x00>;
+			snps,reset-gpio = <&PIO4 4 0>;
+			snps,reset-active-low;
+			snps,reset-delays-us = <0 10000 1000000>;
+
+			st,eee-force-disable;
+		};
+
+		spifsm@9022000 {
+			status = "okay";
+			flash-name = "mx25l25655f";
+			partitions = <&b2204_fsm_partitions>;
+
+			b2204_fsm_partitions: partitions-b2204 {
+				#address-cells = <1>;
+				#size-cells = <1>;
+				partition@0 {
+					label = "boot";
+					/* 20M */
+					reg = <0x00000000 0x01400000>;
+				};
+				partition@1400000 {
+					label = "rest";
+					/* 12M */
+					reg = <0x01400000 0x00c00000>;
+				};
+			};
+		};
+
+		gpio_keys {
+			compatible = "gpio-keys";
+			#address-cells = <1>;
+			#size-cells = <0>;
+			button@1 {
+				label = "wakeup";
+				linux,code = <41>;
+				gpios = <&PIO3 3 1>;
+				gpio-key,wakeup;
+			};
+		};
+
+		nandbch: nand-bch {
+			status = "disabled";
+		};
+
+		snd_uni_player0: snd-uni-player@0 {
+			status = "okay";
+		};
+
+		snd_uni_player3: snd-uni-player@3 {
+			status = "okay";
+		};
+
+		snd_conv_biphase: snd-conv-biphase {
+			status = "okay";
+		};
+
+		snd_audio_glue: snd-audio-glue {
+			status = "okay";
+		};
+	};
+};

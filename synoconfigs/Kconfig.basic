@@ -1,0 +1,438 @@
+menu "System Features"
+
+config SYNO_SYSTEM_CALL
+	bool
+	default y
+	help
+	  DSM #11039
+	  This defines the region of syscalls for Synology features.
+	  Since the framework of syscall declaration in x86 becomes
+	  auto-generated, this item means nothing to x86. However,
+	  ARM still needs this item to define the syscall region,
+	  so this item is kept.
+	  For x86, this is only for readability.
+
+config SYNO_USB_FLASH_BOOT
+	bool "Boot From USB Flash"
+	depends on SYNO_FIXED_DISK_NAME
+	default y
+	help
+	  <DSM>No Bug Entry
+	  Fix on board usb flash device name as "synoboot".
+
+config SYNO_USB_FLASH_DEVICE_INDEX
+	int "USB Boot Flash Device Number"
+	default "255" if SYNO_USB_FLASH_BOOT
+	depends on SYNO_USB_FLASH_BOOT
+	help
+
+config SYNO_USB_FLASH_DEVICE_NAME
+	string "USB Boot Flash Device Name"
+	default "synoboot" if SYNO_USB_FLASH_BOOT
+	depends on SYNO_USB_FLASH_BOOT
+	help
+
+config SYNO_USB_FLASH_DEVICE_PATH
+	string "USB Boot Flash Device Path"
+	default "/dev/synoboot" if SYNO_USB_FLASH_BOOT
+	depends on SYNO_USB_FLASH_BOOT
+	help
+
+config SYNO_INSTALL_FLAG
+	bool "Avoid Users Mounting USB Boot Flash"
+	default y
+	depends on SYNO_USB_FLASH_BOOT
+	help
+	  <DSM>No Bug Entry
+	  Avoid on board usb flash being mounted by user.
+
+config SYNO_DYN_MODULE_INSTALL
+	bool "Dynamic Module Installation"
+	default y
+	depends on SYNO_USB_FLASH_BOOT
+	help
+	  <DSM>#26025 (Bug Entry Missing)
+	  Related to SYNO_USB_FLASH_BOOT.
+	  Allow SYNO_USB_FLASH_BOOT feature to be dynamically enabled/disabled via boot argument.
+
+config SYNO_ICH_GPIO_CTRL
+	bool "X86 PCH/ICH GPIO Control"
+	default y
+	help
+	  GPIO control for x86 chipset south bridge PCH/ICH.
+	  Merged SYNO_PCH_GPIO_CTRL & SYNO_LPC_ICH_GPIO_CTRL.
+	  
+config SYNO_X86_PINCTRL_GPIO
+	bool "X86 GPIO Control With Pinctrl Subsystem"
+	default y
+	depends on X86_64
+	select PINCTRL
+	select GPIOLIB
+	help
+	  GPIO control for x86 chipset with pinctrl subsystem.
+	  
+config SYNO_X86_CORETEMP
+	bool "X86 Core Temperature Detection"
+	default y
+	depends on X86
+	help
+	  <DSM> No bug entry
+	  Support reading CPU core temperature
+
+config SYNO_SUPPORT_EUP
+	bool "EUP Related Features"
+	default y
+	help
+	  <DSM> #40406
+	  Supporting EUP standby mode control, switch EUP standby mode via superI/O.
+	  Using synobios to determine HW could or not fully support EUP.
+	  It means wake on LAN and auto poweron can both works fine in EUP mode.
+
+config SYNO_BOOT_SATA_DOM
+	bool "Synology boot device SATADOM"
+	default n
+	depends on SYNO_USB_FLASH_BOOT
+	help
+	  Synology boot device is a SATADOM device
+
+config SYNO_SATA_DOM_VENDOR
+	string "SATA DOM Vendor"
+	default "SATADOM-"
+	depends on SYNO_BOOT_SATA_DOM
+	help
+	  <DSM> No bug entry
+	  The SATA DOM Vendor name which we support as synoboot.
+
+config SYNO_SATA_DOM_MODEL
+	string "SATA DOM Model"
+	default "TYPE D 3SE"
+	depends on SYNO_BOOT_SATA_DOM
+	help
+
+config SYNO_SATA_DOM_VENDOR_SECOND_SRC
+	string "SATA DOM Vendor Second Source"
+	default "SATADOM"
+	depends on SYNO_BOOT_SATA_DOM
+	help
+	 second source sata dom vendor
+
+config SYNO_SATA_DOM_MODEL_SECOND_SRC
+	string "SATA DOM Model Second Source"
+	default "D150SH"
+	depends on SYNO_BOOT_SATA_DOM
+	help
+	 second source sata dom model
+
+config SYNO_ISCSI_DEVICE
+	bool "Refactor iSCSI Device Name"
+	default y
+	depends on SYNO_FIXED_DISK_NAME
+	help
+	  <DSM> #23148
+	  Make iSCSI device nodes to have prefix "ids"
+
+config SYNO_ISCSI_DEVICE_PREFIX
+	string "The prefix of iSCSI device"
+	default "isd"
+	depends on SYNO_ISCSI_DEVICE
+	help
+	  <DSM> #23148
+	  Modify the iSCSI device name in kernel.
+
+config SYNO_SATA_DEVICE_PREFIX
+	string "The prefix of sata device"
+	default "sd"
+	depends on SYNO_FIXED_DISK_NAME
+	help
+	  <DSM> No bug entry
+	  Make internal SATA disk use fixed device name. For example, the
+	  first channel is sda, the second is sdb, etc. All USB disk would
+	  start from sdq.
+
+config SYNO_X86_AUTO_POWER_ON
+	bool "Supporting Auto-Poweron on X86_64 Platforms"
+	default n
+	depends on X86_64
+	help
+	  <DSM> #14229
+	  Supporting Auto-poweron functions on X86_64
+
+config SYNO_ECC_NOTIFICATION
+	bool "Add ECC notification support"
+	default y
+	depends on X86_64
+	help
+	  <DSM> #19665
+	  When ECC ram detect 1 bit error, it will correct this error automatically,
+	  but we still need a notification scheme let user know the error just occurred.
+
+config SYNO_DISPLAY_CPUINFO
+	bool "Support display CPU Infomation"
+	default y
+	help
+	  <DSM> #45651
+	  Display CPU core number and CPU clock in /proc/sys/kernel/syno_CPU_info_core
+	  and /proc/sys/kernel/syno_CPU_info_clock
+
+config SYNO_GRANTLEY_MAX_CPU_NUM
+	int "Support display CPU Number Information"
+	default 2
+	depends on SYNO_GRANTLEY && SYNO_DISPLAY_CPUINFO
+	help
+	  <DSM> #72724
+	  Display CPU core number in /proc/sys/kernel/syno_CPU_info_core_x
+	  so we need to define physical CPU number
+
+config SYNO_IT87_SUPERIO_RW
+	bool "Support IT87 super IO pins r/w"
+	default y
+	depends on X86_64 && SENSORS_IT87
+	help
+	  <DSM> No Bug Entry
+	  Support IT87 super IO pins r/w.
+	  Writable pins are defined in table writable_pin_setting[].
+
+config SYNO_DMA_COHERENT_POOL_1M
+	bool "increacse DMA coherent pool from 256K to 1M"
+	default n
+	help
+	  <DSM> #78462
+	  This config fixed the failure of loading driver dvb_usb_af9035 for STM_MONACO,
+	  which uses dvb drivers of linux-3.10.x-bsp.
+	  The DMA coherent pool will be too small for initializing driver dvb_usb_af9035,
+	  so increase the pool size from 256K to 1M.
+
+endmenu #System Features
+
+menu "Boot Arguments"
+
+config SYNO_HW_VERSION
+	bool "Hardware Model String"
+	default y
+	help
+	  <DSM> No Bug Entry
+	  Pass hardware version from uboot or other boot loader.
+	  So user mode can get the hardware version by using the
+	  following command:
+	  $ cat /proc/sys/kernel/syno_hw_version
+	
+
+config SYNO_HW_REVISION
+	bool "Hardware Revision String"
+	default y
+	help
+	  <DSM> No Bug Entry
+	  Pass hardware revision from uboot or other boot loader.
+	  So user mode can get the hardware version by using the
+	  following command:
+	  $ cat /proc/sys/kernel/syno_hw_revision
+	
+
+config SYNO_INTERNAL_HD_NUM
+	bool "Internal HDDs For Sequential Spin-Up"
+	default y
+	help
+	
+
+config SYNO_INTERNAL_NETIF_NUM
+	bool "Number Of Network Interfaces"
+	default y
+	help
+	  <DSM> No Bug Entry (see <Linux Kernel Porting - linux-2.6.32> #112)
+	  Parse bootloader command to judge how many network interface used. 
+	  A kernel environment g_internal_netif_num is added
+	
+config SYNO_E1000_LED_SWITCH
+	bool "LED Configuration Of E1000 NIC"
+	default y
+	help
+
+config SYNO_AHCI_SWITCH
+	bool "Enable/Disable AHCI Initialization"
+	default y
+	help
+	  <DSM> #18700
+	  Switch the AHCI functions on/off at run time.
+	  Input an argument while booting up
+	  that ahci=0/1 to disable/enable AHCI
+
+config SYNO_SATA_MV_LED
+	bool "Special Configuration For SATA LED/GPIO"
+	default y
+	help
+	  <DSM> No Bug Entry
+	  Enable argument "SataLedSpecial" to support special Sata LED/GPIO Setting.
+	  Renamed from SYNO_SATA_LED_SPECIAL.
+
+config SYNO_MAC_ADDRESS
+	bool "Read MAC Address from bootloader or flash"
+	default y
+	depends on SYNO_INTERNAL_NETIF_NUM
+	help
+	  <DSM> No Bug Entry
+		The mac addresses are stored in a vendor file in synoboot2 or stored in
+		a fixed location of a specific mtd partition. The mac addresses are
+		read at boot and are written into internal net interface. A kernel
+		environment	grgbLanMac is added.
+
+config SYNO_MAC_MAX
+	int "The max number of mac addresses supported in vendor file"
+	default 8
+	depends on SYNO_MAC_ADDRESS
+	help
+	  <DSM> #52055
+		Originally the vendor file can only support 4 macs because of the
+		preserved space is not enough. New vendor file format can extend
+		to infinite number of macs but currently we limit it to 8.
+		The vendor format version is passed from grub, so mantool knows
+		which vendor version is used by the following command:
+		$ cat /proc/sys/kernel/syno_vender_format_version
+
+config SYNO_DEBUG_FLAG
+	bool "Debug Flag"
+	default y
+	help
+	help
+	  <DSM> #5360
+	  Enable use sysctl to set the value of SynoDebugFlag. We can use it to be
+	  a flag the turn on printk or do other debug actions.
+
+
+config SYNO_SERIAL
+	bool "Serial Number"
+	default y
+	help
+	  <DSM> No Bug Entry
+	  Support for serial number stored in vender partition
+
+config SYNO_FACTORY_USB_FAST_RESET
+	bool "USB fast reset"
+	default y
+	help
+	  <DSM> #44100
+	  Thid config will reduce the request timeout value of SCSI device to let USB reset happens faster.
+	  in factory test, some flashs do not response sometimes,
+	  and the original timeout is 30 or 60s(SD_TIMEOUT), it is too long for factory test.
+	  So let the timeout as 3s for factory test.
+
+config SYNO_FACTORY_USB3_DISABLE
+	bool "Disable USB3"
+	default y
+	help
+	  <DSM> #44100
+	  For factory test, disable usb3, and only usb2 can work.
+
+	  This config is used together with SYNO_FACTORY_USB_FAST_RESET.
+	  Pass hardware version from uboot or other boot loader for factory purpose.
+	  There are two parameters need to pass - syno_usb_fast_reset and syno_disable_usb3.
+	  We could check the status by the command
+	  $ cat /proc/sys/kernel/syno_disable_usb3
+
+config SYNO_EFI
+	bool "Enable EFI runtime service"
+	depends on (SYNO_BROMOLOW || SYNO_GRANTLEY) && EFI
+	default y
+	help
+	  <DSM> #48927
+	  Since denlow is combined with bromolow, this is an additional config for denlow EFI boot which differs from bromolow
+
+config SYNO_CEDARVIEW_USE_EFI_REBOOT
+	bool "Enable cedarview EFI reboot"
+	depends on SYNO_X64 && SYNO_CEDARVIEW
+	default y
+	help
+	  <Linux Kernel Porting - linux-2.6.38> #269
+	  cedarview will reboot failed if not rebooted by EFI
+
+config SYNO_INITRAMFS_DECOMPRESS_ONCE
+	bool "Initramfs file decompress once"
+	default y
+	help
+	  <DSM> #12734
+	  It's workaround for backward compatibility.
+	  Some platform can not decompress initramfs file (rd.gz) correctly when
+	  passing inaccurate size of initrd by boot argument. eg.: initrd=0x2000040,4M
+
+config SYNO_CGROUP_MEM_DISABLE
+	bool "default disable cgroup subsys memory"
+	depends on CGROUPS
+	default y
+	help
+	  <DSM> #75786
+	  Because cgroup subsys memory will impact system performance, thus we default disable it.
+
+config SYNO_MEM_MODE_INFO
+	bool "Transcoding Memory Mode Info"
+	depends on SYNO_MONACO
+	default y
+	help
+	  <DSM> #79246 - add memorylayout tool for STM_MONACO
+	  Create /proc/sys/kernel/syno_mem_mode entry for getting current memory mode.
+
+endmenu #Boot Arguments
+
+menu "Kernel Core Enhancements"
+
+config SYNO_RCU_CPU_STALL_SUPPRESS
+	bool "Disable RCU CPU Stall Detector"
+	default y
+	help
+	  <DSM> #34708, #35477, #35774, #36450
+	  Suppress the annoying messages from RCU CPU stall detector.
+	  Previous Naming: SYNO_DISABLE_RCU_CPU_STALL_DETECTOR
+
+config SYNO_KERNEL_UTC_TIME
+	bool "Keep UTC Time In Kernel And RTC"
+	default y
+	help
+	  <DSM> #1454
+	  Keeps UTC time in Kernel and RTC, donot wrap time.
+	  our user space code will handle this.
+
+config SYNO_MM_OVERCOMMIT_ALWAYS
+	bool "Set Memory Overcommit Policy"
+	default y
+	help
+
+config SYNO_HIDE_LOWMEM_WARNING
+	bool "Do Not Show Nowait Page Allocating Fail Warning"
+	default y
+	help
+	  <DSM> #21036 #37562
+	  Do not show nowait page allocation fail warning to prevent
+	  QC team panic when they stress new platform.
+
+config SYNO_SOFTLOCKUP_COUNTER
+	bool "Trigger soft lockup detector in limited times"
+	default y
+	depends on LOCKUP_DETECTOR
+	help
+	  <DSM> #65293
+	  Trigger soft lockup detector in limited times to prevent show call trace forever.
+
+config SYNO_SOFTLOCKUP_COUNTER_MAX
+	int "The max number to trigger soft lockup detector."
+	default 10
+	depends on SYNO_SOFTLOCKUP_COUNTER
+
+config SYNO_SOFTLOCKUP_THRESH_EXTENSION
+    bool "Extend soft lockup threshold."
+	default y
+	depends on LOCKUP_DETECTOR
+	help
+	  <DSM> #66061
+	  The time to spin up disks in 4bay model may be larger than 7*3=21s,so we extend
+	  the threshold of soft lockup from 20s to 40s to prevent false alarm call trace.
+
+config SYNO_PKMAP_NOT_ENOUGH_FIX
+	bool "Allocate low pages in case pkmap address is not enough"
+	default y
+	depends on SYNO_ALPINE
+	help
+	  In 32-bit arm, pkmap is limited resource, and if kernel wants to map high page,
+	  this page will be mapped to pkmap address and shall be unmapped ASAP. In max
+	  connection test, kernel will try to grab pages and map it to address space.
+	  Sometimes, kernel will always get high pages and run out of pkmap address. So,
+	  limit the kernel to get low pages in write-begin of file system.
+
+endmenu #Kernel Core Enhancements

@@ -1,0 +1,15 @@
+#!/bin/bash
+# Copyright (c) 2000-2012 Synology Inc. All rights reserved.
+# vim:ft=sh
+
+for _inc in $ToolChainInclude $ToolChainInclude64 $StaticInclude $StaticInclude64; do
+	for _kinc in $(ls usr/include); do
+		if [ "$(ls -A usr/include/$_kinc)" ]; then
+			mkdir -p "${DebDevDir}/$_inc/$_kinc" ${DebDevDir}/DEBIAN/ &>/dev/null
+			echo "rm -rf \"$_inc/$_kinc\"" >> ${DebDevDir}/DEBIAN/preinst
+			# avoid copy .install flag files
+
+			cp -a usr/include/$_kinc/* "${DebDevDir}/$_inc/$_kinc"
+		fi
+	done
+done

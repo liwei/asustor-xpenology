@@ -1,0 +1,44 @@
+#!/bin/bash
+# Copyright (c) 2000-2012 Synology Inc. All rights reserved.
+# vim:ft=sh
+
+export ARCH=${ARCH}
+case "$BUILD_TARGET" in
+	X64|BROMOLOW|GRANTLEY|CEDARVIEW|AVOTON|BROMOLOWESM|BROADWELL)
+		export CROSS_COMPILE=${ToolChainPrefix64} CC=${CC64}
+		KERNEL_CC=${CC64}
+		;;
+	*)
+		CC=`echo ${CC} | awk -F" " '{print $1}'`
+		export CROSS_COMPILE=${ToolChainPrefix} CC="${CC}"
+		KERNEL_CC="${CC}"
+		;;
+esac
+
+cp -vf "/source/synobios/include/synobios.h" include/linux/synobios.h
+
+case "$BUILD_TARGET" in
+	PPC_QORIQ)
+		cp -f synoconfigs/ppcQorIQ	.config
+		;;
+	X64)
+		cp -f synoconfigs/x86_64	.config
+		;;
+	BROMOLOWESM)
+		cp -f synoconfigs/bromolow	.config
+		;;
+	MARVELL_88F6281)
+		cp -f synoconfigs/88f6281	.config
+		;;
+	*)
+		cp -f synoconfigs/$PLATFORM_ABBR .config
+		;;
+esac
+
+# Install kernel headers
+make oldconfig
+make prepare
+make CROSS_COMPILE="$ToolChainPrefix" headers_install
+
+cp -fa include/linux/syno_autoconf.h usr/include/linux/syno_autoconf.h
+cp -fa include/linux/synobios.h usr/include/linux/synobios.h

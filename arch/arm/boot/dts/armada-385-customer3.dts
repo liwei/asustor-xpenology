@@ -1,0 +1,158 @@
+/*
+ * Device Tree file for Marvell Armada 388 AMC board
+ * (DB-88F6828-AMC)
+ *
+ *  Copyright (C) 2014 Marvell
+ *
+ * Nadav Haklai <nadavh@marvell.com>
+ *
+ * This file is licensed under the terms of the GNU General Public
+ * License version 2.  This program is licensed "as is" without any
+ * warranty of any kind, whether express or implied.
+ */
+
+/dts-v1/;
+#include <dt-bindings/gpio/gpio.h>
+#include "armada-385-388.dtsi"
+
+/ {
+	model = "Marvell Armada 388 Development General Purpose";
+	compatible = "marvell,a385-db-amc", "marvell,armada385", "marvell,armada38x";
+
+	chosen {
+		bootargs = "console=ttyS0,115200 earlyprintk";
+	};
+
+	memory {
+		device_type = "memory";
+		reg = <0x00000000 0x10000000>; /* 256 MB */
+	};
+
+	soc {
+		internal-regs {
+			ethernet@70000 {
+				status = "okay";
+				phy = <&phy0>;
+				phy-mode = "rgmii";
+			};
+
+			ethernet@30000 {
+				status = "disabled";
+				phy = <&phy1>;
+				phy-mode = "sgmii";
+			};
+
+			ethernet@34000 {
+				status = "okay";
+				phy = <&phy2>;
+				phy-mode = "sgmii";
+			};
+
+			i2c0: i2c@11000 {
+				status = "okay";
+				clock-frequency = <100000>;
+			};
+
+			i2c1: i2c@11100 {
+				status = "okay";
+				clock-frequency = <100000>;
+			};
+
+			mdio {
+				phy0: ethernet-phy@0 {
+					reg = <1>;
+				};
+
+				phy1: ethernet-phy@1 {
+					reg = <0>;
+				};
+
+				phy2: ethernet-phy@2 {
+					reg = <0>;
+				};
+
+			};
+
+			sdhci@d8000 {
+				broken-cd;
+				wp-inverted;
+				bus-width = <8>;
+				status = "disabled";
+				no-1-8-v;
+			};
+
+			serial@12000 {
+				status = "okay";
+			};
+
+			spi1: spi@10680 {
+				status = "okay";
+
+				spi-flash@0 {
+					#address-cells = <1>;
+					#size-cells = <0>;
+					compatible = "w25q32";
+					reg = <0>; /* Chip select 0 */
+					spi-max-frequency = <108000000>;
+					mtd0@00000000 {
+						label = "U-Boot";
+						reg = <0x00000000 0x00400000>;
+						read-only;
+					};
+
+					mtd1@00400000 {
+						label = "Root";
+						reg = <0x00400000 0x00c00000>;
+					};
+				};
+			};
+			nfc: nand@d0000 {
+				status = "okay";
+				#address-cells = <0x00000001>;
+				#size-cells = <0x00000001>;
+				nfc,nfc-mode = "normal";
+				nfc,nfc-dma = <0x00000000>;
+				nfc,nfc-width = <0x00000008>;
+				nfc,ecc-type = <0x00000002>;
+				nfc,num-cs = <0x00000001>;
+				mtd0@00000000 {
+					label = "U-Boot";
+					reg = <0x00000000 0x00600000>;
+					read-only;
+				};
+				mtd1@00600000 {
+					label = "uImage";
+					reg = <0x00600000 0x00400000>;
+					read-only;
+				};
+				mtd2@00a00000 {
+					label = "Root";
+					reg = <0x00a00000 0x3f600000>;
+				};
+			};
+			usb@58000 {
+				status = "okay";
+			};
+			prestera {
+			        compatible = "marvell,armada-prestera";
+			        status = "okay";
+			};
+		};
+
+		pcie-controller {
+			status = "okay";
+			/*
+			 * The two PCIe units are accessible through
+			 * standard PCIe slots on the board.
+			 */
+			pcie@1,0 {
+				/* Port 0, Lane 0 */
+				status = "okay";
+			};
+			pcie@2,0 {
+				/* Port 1, Lane 0 */
+				status = "disabled";
+			};
+		};
+	};
+};

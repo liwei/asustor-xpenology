@@ -1,0 +1,9 @@
+menu "Cryptodev-linux Configuration"
+
+config SYNO_CRYPTODEV_LINUX
+	tristate "Cryptodev-linux interface"
+	depends on SYNO_ALPINE
+	help
+	  Provide cryptodev-linux interface.
+
+endmenu

@@ -1,0 +1,27 @@
+config ST_LPM
+	bool "LPM on STMicroelectronics STi series of SoCs"
+	depends on ARCH_STI
+	help
+	  Support for LPM driver on STMicroelectronics STi series
+	  of SoCs.
+	  Enable this config parameter for enabling ST LPM driver
+	  in the kernel.
+
+config SBC_FW_LOADED_BY_PBL
+	bool "Support for SBC Fw loaded by PBL"
+	depends on ST_LPM
+	default n
+	help
+	  Support for SBC Fw being loaded by PBL.
+	  Enable this config parameter to make the ST LPM driver
+	  not loading the SBC Fw.
+
+config GENERAL_SBC_TRACES
+	bool "Support for General SBC traces trough LPM driver"
+	depends on ST_LPM
+	default n
+	help
+	  SBC Traces can be sent to host through LPM mailbox. This
+	  will allow to trace SBC Fw without need to recompile it.
+	  This CONFIG allows GENERAL SBC Fw traces by default when
+	  SBC Fw is loaded and booted.
